@@ -1,0 +1,72 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://excalidraw.com",
+  "elements": [
+    {
+      "id": "lbl-title", "type": "text", "x": 40, "y": 20, "width": 700, "height": 36,
+      "text": "The Cache Hierarchy (full stack view)", "fontSize": 22, "fontFamily": 1
+    },
+    {
+      "id": "lbl-subtitle", "type": "text", "x": 40, "y": 60, "width": 700, "height": 20,
+      "text": "Every layer is a PHP execution avoided. Hit the left as much as possible.", "fontSize": 13, "fontFamily": 1
+    },
+    {
+      "id": "b1", "type": "rectangle", "x": 40, "y": 100, "width": 680, "height": 50,
+      "strokeColor": "#1971c2", "backgroundColor": "#d0ebff", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-b1", "type": "text", "x": 220, "y": 118, "width": 240, "height": 20,
+      "text": "1. Browser Cache (Cache-Control: immutable)", "fontSize": 14, "fontFamily": 1
+    },
+    {
+      "id": "b2", "type": "rectangle", "x": 80, "y": 175, "width": 600, "height": 50,
+      "strokeColor": "#f76707", "backgroundColor": "#ffe8cc", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-b2", "type": "text", "x": 220, "y": 193, "width": 320, "height": 20,
+      "text": "2. CDN / Cloudflare Edge (global PoPs, R2 for media)", "fontSize": 14, "fontFamily": 1
+    },
+    {
+      "id": "b3", "type": "rectangle", "x": 120, "y": 250, "width": 520, "height": 50,
+      "strokeColor": "#2f9e44", "backgroundColor": "#d3f9d8", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-b3", "type": "text", "x": 220, "y": 268, "width": 320, "height": 20,
+      "text": "3. Nginx FastCGI Page Cache (RAM, 60 min TTL)", "fontSize": 14, "fontFamily": 1
+    },
+    {
+      "id": "b4", "type": "rectangle", "x": 160, "y": 325, "width": 440, "height": 50,
+      "strokeColor": "#7950f2", "backgroundColor": "#f3d9fa", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-b4", "type": "text", "x": 220, "y": 343, "width": 320, "height": 20,
+      "text": "4. PHP OPcache (bytecode in shared memory)", "fontSize": 14, "fontFamily": 1
+    },
+    {
+      "id": "b5", "type": "rectangle", "x": 200, "y": 400, "width": 360, "height": 50,
+      "strokeColor": "#c92a2a", "backgroundColor": "#ffe3e3", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-b5", "type": "text", "x": 220, "y": 418, "width": 320, "height": 20,
+      "text": "5. Redis Object Cache (WP transients, query results)", "fontSize": 14, "fontFamily": 1
+    },
+    {
+      "id": "b6", "type": "rectangle", "x": 240, "y": 475, "width": 280, "height": 50,
+      "strokeColor": "#e67700", "backgroundColor": "#fff3bf", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-b6", "type": "text", "x": 270, "y": 493, "width": 220, "height": 20,
+      "text": "6. MariaDB (innodb_buffer_pool)", "fontSize": 14, "fontFamily": 1
+    },
+    {
+      "id": "arrow-down", "type": "arrow", "x": 380, "y": 550, "width": 0, "height": 40,
+      "strokeColor": "#e03131", "roughness": 1
+    },
+    {
+      "id": "lbl-disk", "type": "text", "x": 270, "y": 600, "width": 220, "height": 20,
+      "text": "💀 Disk I/O (the floor you never want to hit)", "fontSize": 13, "fontFamily": 1, "strokeColor": "#e03131"
+    }
+  ],
+  "appState": { "viewBackgroundColor": "#ffffff" }
+}

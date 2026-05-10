@@ -1,0 +1,66 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://excalidraw.com",
+  "elements": [
+    {
+      "id": "lbl-title", "type": "text", "x": 40, "y": 30, "width": 780, "height": 36,
+      "text": "Level 4 — Hybrid Static: WP as a CMS, not a Runtime", "fontSize": 22, "fontFamily": 1, "strokeColor": "#f76707"
+    },
+    {
+      "id": "lbl-subtitle", "type": "text", "x": 40, "y": 72, "width": 780, "height": 20,
+      "text": "Static HTML shell + JS-hydrated Dynamic Islands for cart/search. Origin sees near-zero traffic at peak.", "fontSize": 13, "fontFamily": 1
+    },
+    {
+      "id": "browser", "type": "rectangle", "x": 20, "y": 150, "width": 100, "height": 80,
+      "strokeColor": "#1971c2", "backgroundColor": "#d0ebff", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-browser", "type": "text", "x": 43, "y": 175, "width": 60, "height": 30, "text": "Browser\n(user)", "fontSize": 13, "fontFamily": 1
+    },
+    {
+      "id": "static-nginx", "type": "rectangle", "x": 200, "y": 130, "width": 150, "height": 120,
+      "strokeColor": "#2f9e44", "backgroundColor": "#d3f9d8", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-static", "type": "text", "x": 215, "y": 148, "width": 130, "height": 80,
+      "text": "Static Nginx\n:8090\n\nHTML/CSS/JS\n(5 MB total)", "fontSize": 12, "fontFamily": 1
+    },
+    {
+      "id": "island-cart", "type": "rectangle", "x": 200, "y": 290, "width": 150, "height": 50,
+      "strokeColor": "#f76707", "backgroundColor": "#ffe8cc", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-island", "type": "text", "x": 215, "y": 308, "width": 130, "height": 20,
+      "text": "JS Dynamic Islands\n(cart, search, comments)", "fontSize": 11, "fontFamily": 1
+    },
+    {
+      "id": "wp-origin", "type": "rectangle", "x": 460, "y": 150, "width": 150, "height": 120,
+      "strokeColor": "#868e96", "backgroundColor": "#f8f9fa", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-origin", "type": "text", "x": 475, "y": 168, "width": 130, "height": 80,
+      "text": "WP Origin\n:8080\n\n≈ idle at peak\n(edit & API only)", "fontSize": 12, "fontFamily": 1
+    },
+    {
+      "id": "arrow-rest", "type": "arrow", "x": 350, "y": 320, "width": 110, "height": -130,
+      "strokeColor": "#f76707", "roughness": 1
+    },
+    {
+      "id": "lbl-rest", "type": "text", "x": 355, "y": 270, "width": 120, "height": 20,
+      "text": "/wp-json/wc/store/\n(cart/search only)", "fontSize": 11, "fontFamily": 1, "strokeColor": "#f76707"
+    },
+    {
+      "id": "db", "type": "rectangle", "x": 680, "y": 170, "width": 120, "height": 60,
+      "strokeColor": "#e67700", "backgroundColor": "#fff3bf", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-db", "type": "text", "x": 700, "y": 192, "width": 80, "height": 20, "text": "MariaDB", "fontSize": 13, "fontFamily": 1
+    },
+    {
+      "id": "lbl-origin-idle", "type": "text", "x": 460, "y": 290, "width": 200, "height": 40,
+      "text": "Origin RPS ≈ 0 during traffic peaks\n→ $12 VPS basically bored", "fontSize": 11, "fontFamily": 1, "strokeColor": "#2f9e44"
+    }
+  ],
+  "appState": { "viewBackgroundColor": "#ffffff" }
+}

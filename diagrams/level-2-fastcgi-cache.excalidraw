@@ -1,0 +1,74 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://excalidraw.com",
+  "elements": [
+    {
+      "id": "lbl-title", "type": "text", "x": 40, "y": 30, "width": 680, "height": 36,
+      "text": "Level 2 — FastCGI Page Cache + MariaDB Tuning", "fontSize": 22, "fontFamily": 1, "strokeColor": "#1971c2"
+    },
+    {
+      "id": "lbl-subtitle", "type": "text", "x": 40, "y": 72, "width": 680, "height": 20,
+      "text": "Page cache = no PHP execution for anonymous users. MariaDB buffer pool holds entire dataset in RAM.", "fontSize": 13, "fontFamily": 1
+    },
+    {
+      "id": "browser", "type": "rectangle", "x": 20, "y": 140, "width": 100, "height": 60,
+      "strokeColor": "#1971c2", "backgroundColor": "#d0ebff", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-browser", "type": "text", "x": 43, "y": 163, "width": 60, "height": 20, "text": "Browser", "fontSize": 14, "fontFamily": 1
+    },
+    {
+      "id": "nginx", "type": "rectangle", "x": 180, "y": 120, "width": 140, "height": 120,
+      "strokeColor": "#2f9e44", "backgroundColor": "#d3f9d8", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-nginx", "type": "text", "x": 196, "y": 138, "width": 120, "height": 80,
+      "text": "Nginx\nFastCGI Cache\n↓\nHIT → serve\nMISS → FPM", "fontSize": 12, "fontFamily": 1
+    },
+    {
+      "id": "cache-vol", "type": "rectangle", "x": 180, "y": 280, "width": 140, "height": 50,
+      "strokeColor": "#2f9e44", "backgroundColor": "#b2f2bb", "fillStyle": "solid", "roughness": 1
+    },
+    {
+      "id": "lbl-cache", "type": "text", "x": 195, "y": 298, "width": 110, "height": 20,
+      "text": "/var/cache/nginx\n(fastcgi_cache vol)", "fontSize": 11, "fontFamily": 1
+    },
+    {
+      "id": "fpm", "type": "rectangle", "x": 400, "y": 140, "width": 130, "height": 80,
+      "strokeColor": "#7950f2", "backgroundColor": "#f3d9fa", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-fpm", "type": "text", "x": 415, "y": 163, "width": 100, "height": 40,
+      "text": "PHP-FPM\n(only MISS hits)", "fontSize": 12, "fontFamily": 1
+    },
+    {
+      "id": "redis", "type": "rectangle", "x": 400, "y": 270, "width": 130, "height": 60,
+      "strokeColor": "#c92a2a", "backgroundColor": "#ffe3e3", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-redis", "type": "text", "x": 422, "y": 293, "width": 90, "height": 20, "text": "Redis (obj cache)", "fontSize": 12, "fontFamily": 1
+    },
+    {
+      "id": "mysql", "type": "rectangle", "x": 600, "y": 140, "width": 140, "height": 80,
+      "strokeColor": "#e67700", "backgroundColor": "#fff3bf", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-mysql", "type": "text", "x": 616, "y": 156, "width": 110, "height": 50,
+      "text": "MariaDB 11\nbuffer_pool=512M\nslow_log ON", "fontSize": 12, "fontFamily": 1
+    },
+    {
+      "id": "lbl-hit", "type": "text", "x": 130, "y": 148, "width": 50, "height": 20,
+      "text": "HIT ✓", "fontSize": 12, "fontFamily": 1, "strokeColor": "#2f9e44"
+    },
+    {
+      "id": "lbl-miss", "type": "text", "x": 335, "y": 148, "width": 60, "height": 20,
+      "text": "MISS only", "fontSize": 12, "fontFamily": 1, "strokeColor": "#e67700"
+    },
+    {
+      "id": "lbl-skip-php", "type": "text", "x": 180, "y": 350, "width": 200, "height": 20,
+      "text": "~95% of requests never hit PHP", "fontSize": 12, "fontFamily": 1, "strokeColor": "#2f9e44"
+    }
+  ],
+  "appState": { "viewBackgroundColor": "#ffffff" }
+}

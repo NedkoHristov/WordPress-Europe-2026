@@ -1,0 +1,26 @@
+# Level 1+ — PHP 8.3-FPM with WP-CLI and Redis extension
+FROM wordpress:6.8-fpm
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    less \
+    mariadb-client \
+    curl \
+    procps \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install WP-CLI
+RUN curl -sO https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
+    && chmod +x wp-cli.phar \
+    && mv wp-cli.phar /usr/local/bin/wp
+
+# Redis PHP extension (via PECL)
+RUN pecl install redis \
+    && docker-php-ext-enable redis
+
+# php-fpm status page (needed by exporter)
+RUN sed -i 's/^;pm.status_path = .*/pm.status_path = \/status/' /usr/local/etc/php-fpm.d/www.conf
+
+COPY scripts/wp-setup.sh /usr/local/bin/wp-setup.sh
+COPY scripts/wp-bloat.sh /usr/local/bin/wp-bloat.sh
+COPY scripts/wp-perf-test.sh /usr/local/bin/wp-perf-test.sh
+RUN chmod +x /usr/local/bin/wp-setup.sh /usr/local/bin/wp-bloat.sh /usr/local/bin/wp-perf-test.sh

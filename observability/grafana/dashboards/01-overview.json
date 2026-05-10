@@ -1,0 +1,272 @@
+{
+  "uid": "wp-overview",
+  "title": "01 — WP Stack Overview (All Levels)",
+  "description": "The single pane of glass — RPS, latency, CPU, RAM, all containers. Screenshot this during every level transition.",
+  "tags": ["wordpress", "overview"],
+  "timezone": "browser",
+  "refresh": "5s",
+  "time": { "from": "now-10m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "HTTP Requests / sec",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [
+            { "value": 0, "color": "green" },
+            { "value": 100, "color": "yellow" },
+            { "value": 200, "color": "red" }
+          ]},
+          "unit": "reqps"
+        }
+      },
+      "targets": [{
+        "datasource": "Prometheus",
+        "expr": "sum(rate(nginx_http_requests_total[30s]))",
+        "legendFormat": "RPS"
+      }]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "p95 Latency",
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [
+            { "value": 0, "color": "green" },
+            { "value": 500, "color": "yellow" },
+            { "value": 2000, "color": "red" }
+          ]},
+          "unit": "ms"
+        }
+      },
+      "targets": [{
+        "datasource": "Prometheus",
+        "expr": "histogram_quantile(0.95, sum(rate(k6_http_req_duration_bucket[1m])) by (le)) * 1000",
+        "legendFormat": "p95"
+      }]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "CPU Usage",
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [
+            { "value": 0, "color": "green" },
+            { "value": 70, "color": "yellow" },
+            { "value": 90, "color": "red" }
+          ]},
+          "unit": "percent",
+          "max": 100
+        }
+      },
+      "targets": [{
+        "datasource": "Prometheus",
+        "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[30s])) * 100)",
+        "legendFormat": "CPU %"
+      }]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "RAM Available",
+      "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [
+            { "value": 0, "color": "red" },
+            { "value": 256, "color": "yellow" },
+            { "value": 512, "color": "green" }
+          ]},
+          "unit": "decmbytes"
+        }
+      },
+      "targets": [{
+        "datasource": "Prometheus",
+        "expr": "node_memory_MemAvailable_bytes / 1024 / 1024",
+        "legendFormat": "Free MB"
+      }]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Load Average (1m)",
+      "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [
+            { "value": 0, "color": "green" },
+            { "value": 2, "color": "yellow" },
+            { "value": 4, "color": "red" }
+          ]}
+        }
+      },
+      "targets": [{
+        "datasource": "Prometheus",
+        "expr": "node_load1",
+        "legendFormat": "Load 1m"
+      }]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Active VUs (k6)",
+      "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [
+            { "value": 0, "color": "blue" }
+          ]},
+          "unit": "short"
+        }
+      },
+      "targets": [{
+        "datasource": "Prometheus",
+        "expr": "k6_vus",
+        "legendFormat": "VUs"
+      }]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Request Rate & Error Rate",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": { "unit": "reqps" },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Errors" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" }},
+                           { "id": "custom.fillOpacity", "value": 20 }]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "sum(rate(nginx_http_requests_total[30s]))",
+          "legendFormat": "Total RPS"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "sum(rate(nginx_http_requests_total{status=~\"5..\"}[30s]))",
+          "legendFormat": "Errors (5xx)"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "sum(rate(k6_http_reqs_total[30s]))",
+          "legendFormat": "k6 VU requests"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Response Time Distribution",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": { "unit": "ms" }
+      },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "histogram_quantile(0.50, sum(rate(k6_http_req_duration_bucket[1m])) by (le)) * 1000",
+          "legendFormat": "p50"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "histogram_quantile(0.90, sum(rate(k6_http_req_duration_bucket[1m])) by (le)) * 1000",
+          "legendFormat": "p90"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "histogram_quantile(0.95, sum(rate(k6_http_req_duration_bucket[1m])) by (le)) * 1000",
+          "legendFormat": "p95"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "histogram_quantile(0.99, sum(rate(k6_http_req_duration_bucket[1m])) by (le)) * 1000",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "CPU & Load Average",
+      "gridPos": { "x": 0, "y": 12, "w": 8, "h": 6 },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[30s])) * 100)",
+          "legendFormat": "CPU %"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "node_load1",
+          "legendFormat": "Load 1m"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "node_load5",
+          "legendFormat": "Load 5m"
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "Memory",
+      "gridPos": { "x": 8, "y": 12, "w": 8, "h": 6 },
+      "fieldConfig": { "defaults": { "unit": "decmbytes" } },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "node_memory_MemTotal_bytes / 1024 / 1024",
+          "legendFormat": "Total"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "node_memory_MemAvailable_bytes / 1024 / 1024",
+          "legendFormat": "Available"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "(node_memory_SwapTotal_bytes - node_memory_SwapFree_bytes) / 1024 / 1024",
+          "legendFormat": "Swap Used"
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "type": "timeseries",
+      "title": "Network I/O",
+      "gridPos": { "x": 16, "y": 12, "w": 8, "h": 6 },
+      "fieldConfig": { "defaults": { "unit": "Bps" } },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "rate(node_network_receive_bytes_total{device!~\"lo|docker.*\"}[30s])",
+          "legendFormat": "In ({{ device }})"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "rate(node_network_transmit_bytes_total{device!~\"lo|docker.*\"}[30s])",
+          "legendFormat": "Out ({{ device }})"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39
+}

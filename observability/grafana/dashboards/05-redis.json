@@ -1,0 +1,96 @@
+{
+  "uid": "wp-redis",
+  "title": "05 — Redis Object Cache",
+  "description": "Redis memory, hit/miss ratio, evictions, keyspace. Screenshot at Level 1 to show object cache absorbing WP DB load.",
+  "tags": ["redis"],
+  "timezone": "browser",
+  "refresh": "5s",
+  "time": { "from": "now-10m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Cache Hit Ratio",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "value": 0, "color": "red" }, { "value": 0.7, "color": "yellow" }, { "value": 0.9, "color": "green" }] } } },
+      "targets": [{ "datasource": "Prometheus", "expr": "redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total)", "legendFormat": "Hit Ratio" }]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Used Memory",
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "decmbytes" } },
+      "targets": [{ "datasource": "Prometheus", "expr": "redis_memory_used_bytes / 1024 / 1024", "legendFormat": "Used MB" }]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Total Keys",
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [{ "datasource": "Prometheus", "expr": "redis_db_keys{db=\"db0\"}", "legendFormat": "Keys" }]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Evictions / sec",
+      "description": "Non-zero = maxmemory is too small. Evictions mean cache churn.",
+      "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 1, "color": "red" }] } } },
+      "targets": [{ "datasource": "Prometheus", "expr": "rate(redis_evicted_keys_total[30s])", "legendFormat": "Evictions/s" }]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Connected Clients",
+      "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [{ "datasource": "Prometheus", "expr": "redis_connected_clients", "legendFormat": "Clients" }]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Commands / sec",
+      "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "ops" } },
+      "targets": [{ "datasource": "Prometheus", "expr": "rate(redis_commands_total[30s])", "legendFormat": "cmd/s" }]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Hits vs Misses over time",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "unit": "ops" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "rate(redis_keyspace_hits_total[30s])", "legendFormat": "Hits/s" },
+        { "datasource": "Prometheus", "expr": "rate(redis_keyspace_misses_total[30s])", "legendFormat": "Misses/s" }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Memory Used vs Max",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "unit": "decmbytes" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "redis_memory_used_bytes / 1024 / 1024", "legendFormat": "Used" },
+        { "datasource": "Prometheus", "expr": "redis_memory_max_bytes / 1024 / 1024", "legendFormat": "Max (128MB limit)" }
+      ]
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "DB Queries Saved by Redis Object Cache",
+      "description": "Diff between MySQL QPS and PHP-FPM req/s approximates queries served from Redis",
+      "gridPos": { "x": 0, "y": 12, "w": 24, "h": 6 },
+      "fieldConfig": { "defaults": { "unit": "ops" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "rate(redis_commands_total[30s])", "legendFormat": "Redis ops/s (cache hits)" },
+        { "datasource": "Prometheus", "expr": "rate(mysql_global_status_queries[30s])", "legendFormat": "MySQL queries/s" },
+        { "datasource": "Prometheus", "expr": "rate(phpfpm_accepted_connections_total[30s])", "legendFormat": "PHP requests/s" }
+      ]
+    }
+  ],
+  "schemaVersion": 39
+}

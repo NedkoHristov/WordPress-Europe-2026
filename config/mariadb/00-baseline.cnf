@@ -1,0 +1,6 @@
+# MariaDB — Level 0 baseline (out-of-the-box defaults, intentionally untuned)
+[mysqld]
+# Nothing tuned — default InnoDB buffer pool = 128MB
+# query_cache is deprecated in MySQL 8 / MariaDB 11 but leaving defaults
+innodb_buffer_pool_size = 128M
+max_connections = 151

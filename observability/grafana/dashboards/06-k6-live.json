@@ -1,0 +1,131 @@
+{
+  "uid": "wp-k6-live",
+  "title": "06 — k6 Live Load Test",
+  "description": "Real-time k6 metrics: VUs, RPS, p95 latency, error rate, checks. THE primary screenshot dashboard — one for each level transition.",
+  "tags": ["k6", "load-test"],
+  "timezone": "browser",
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Virtual Users",
+      "gridPos": { "x": 0, "y": 0, "w": 3, "h": 4 },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "value": 0, "color": "blue" }] }, "unit": "short" } },
+      "targets": [{ "datasource": "Prometheus", "expr": "k6_vus", "legendFormat": "VUs" }]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "HTTP Requests / sec",
+      "gridPos": { "x": 3, "y": 0, "w": 3, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "reqps", "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "value": 0, "color": "green" }] } } },
+      "targets": [{ "datasource": "Prometheus", "expr": "sum(rate(k6_http_reqs_total[30s]))", "legendFormat": "RPS" }]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "p95 Latency",
+      "gridPos": { "x": 6, "y": 0, "w": 3, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "ms", "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 500, "color": "yellow" }, { "value": 2000, "color": "red" }] } } },
+      "targets": [{ "datasource": "Prometheus", "expr": "histogram_quantile(0.95, sum(rate(k6_http_req_duration_bucket[1m])) by (le)) * 1000", "legendFormat": "p95 ms" }]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Error Rate",
+      "gridPos": { "x": 9, "y": 0, "w": 3, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 0.01, "color": "yellow" }, { "value": 0.05, "color": "red" }] } } },
+      "targets": [{ "datasource": "Prometheus", "expr": "sum(rate(k6_http_reqs_total{expected_response=\"false\"}[30s])) / sum(rate(k6_http_reqs_total[30s]))", "legendFormat": "Error %" }]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Check Pass Rate",
+      "gridPos": { "x": 12, "y": 0, "w": 3, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "value": 0, "color": "red" }, { "value": 0.95, "color": "yellow" }, { "value": 0.99, "color": "green" }] } } },
+      "targets": [{ "datasource": "Prometheus", "expr": "sum(rate(k6_checks_total{result=\"pass\"}[30s])) / sum(rate(k6_checks_total[30s]))", "legendFormat": "Pass %" }]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Total Requests",
+      "gridPos": { "x": 15, "y": 0, "w": 3, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [{ "datasource": "Prometheus", "expr": "sum(k6_http_reqs_total)", "legendFormat": "Total" }]
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "Data Received",
+      "gridPos": { "x": 18, "y": 0, "w": 3, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "decmbytes" } },
+      "targets": [{ "datasource": "Prometheus", "expr": "sum(k6_data_received_total) / 1024 / 1024", "legendFormat": "MB" }]
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "Iterations / sec",
+      "gridPos": { "x": 21, "y": 0, "w": 3, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [{ "datasource": "Prometheus", "expr": "sum(rate(k6_iterations_total[30s]))", "legendFormat": "iter/s" }]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "VUs & RPS — Load Ramp",
+      "description": "The ramp shape reveals the breaking point: where RPS plateaus but VUs keep climbing.",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 9 },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "VUs" }, "properties": [{ "id": "custom.axisPlacement", "value": "right" }, { "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" }}] }
+        ]
+      },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "sum(rate(k6_http_reqs_total[30s]))", "legendFormat": "RPS" },
+        { "datasource": "Prometheus", "expr": "k6_vus", "legendFormat": "VUs" }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Latency Percentiles — p50/p90/p95/p99",
+      "description": "p99 going vertical = the server is queueing. p95 > 2000ms = user-visible failures.",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 9 },
+      "fieldConfig": { "defaults": { "unit": "ms" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "histogram_quantile(0.50, sum(rate(k6_http_req_duration_bucket[1m])) by (le)) * 1000", "legendFormat": "p50" },
+        { "datasource": "Prometheus", "expr": "histogram_quantile(0.90, sum(rate(k6_http_req_duration_bucket[1m])) by (le)) * 1000", "legendFormat": "p90" },
+        { "datasource": "Prometheus", "expr": "histogram_quantile(0.95, sum(rate(k6_http_req_duration_bucket[1m])) by (le)) * 1000", "legendFormat": "p95" },
+        { "datasource": "Prometheus", "expr": "histogram_quantile(0.99, sum(rate(k6_http_req_duration_bucket[1m])) by (le)) * 1000", "legendFormat": "p99" }
+      ]
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "Request Breakdown by Phase",
+      "description": "Connecting time spiking = connection pool exhausted. Waiting time spiking = server processing slow.",
+      "gridPos": { "x": 0, "y": 13, "w": 12, "h": 7 },
+      "fieldConfig": { "defaults": { "unit": "ms" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "histogram_quantile(0.95, sum(rate(k6_http_req_connecting_bucket[1m])) by (le)) * 1000", "legendFormat": "Connecting p95" },
+        { "datasource": "Prometheus", "expr": "histogram_quantile(0.95, sum(rate(k6_http_req_waiting_bucket[1m])) by (le)) * 1000", "legendFormat": "Waiting p95 (TTFB)" },
+        { "datasource": "Prometheus", "expr": "histogram_quantile(0.95, sum(rate(k6_http_req_receiving_bucket[1m])) by (le)) * 1000", "legendFormat": "Receiving p95" }
+      ]
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "Error Rate & Failed Checks",
+      "gridPos": { "x": 12, "y": 13, "w": 12, "h": 7 },
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "sum(rate(k6_http_reqs_total{expected_response=\"false\"}[30s]))", "legendFormat": "Error RPS" },
+        { "datasource": "Prometheus", "expr": "sum(rate(k6_checks_total{result=\"fail\"}[30s]))", "legendFormat": "Failed Checks/s" }
+      ]
+    }
+  ],
+  "schemaVersion": 39
+}

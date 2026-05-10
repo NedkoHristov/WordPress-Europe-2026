@@ -1,0 +1,69 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://excalidraw.com",
+  "elements": [
+    {
+      "id": "browser", "type": "rectangle", "x": 60, "y": 180, "width": 120, "height": 60,
+      "strokeColor": "#1971c2", "backgroundColor": "#d0ebff", "fillStyle": "solid",
+      "roughness": 1, "roundness": {"type": 3},
+      "label": {"text": "Browser"}
+    },
+    {
+      "id": "lbl-browser", "type": "text", "x": 95, "y": 203, "width": 60, "height": 20,
+      "text": "Browser", "fontSize": 16, "fontFamily": 1
+    },
+    {
+      "id": "apache", "type": "rectangle", "x": 280, "y": 160, "width": 160, "height": 100,
+      "strokeColor": "#e03131", "backgroundColor": "#ffe3e3", "fillStyle": "solid",
+      "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-apache", "type": "text", "x": 306, "y": 180, "width": 110, "height": 60,
+      "text": "Apache\n+ mod_php\n(1 proc/req)", "fontSize": 14, "fontFamily": 1
+    },
+    {
+      "id": "mysql", "type": "cylinder", "x": 540, "y": 180, "width": 120, "height": 60,
+      "strokeColor": "#e67700", "backgroundColor": "#fff3bf", "fillStyle": "solid", "roughness": 1
+    },
+    {
+      "id": "lbl-mysql", "type": "text", "x": 560, "y": 200, "width": 80, "height": 20,
+      "text": "MySQL 8", "fontSize": 14, "fontFamily": 1
+    },
+    {
+      "id": "arrow1", "type": "arrow", "x": 180, "y": 210, "width": 100, "height": 0,
+      "strokeColor": "#333", "roughness": 1,
+      "startBinding": {"elementId": "browser", "gap": 0, "focus": 0},
+      "endBinding": {"elementId": "apache", "gap": 0, "focus": 0}
+    },
+    {
+      "id": "arrow2", "type": "arrow", "x": 440, "y": 210, "width": 100, "height": 0,
+      "strokeColor": "#333", "roughness": 1
+    },
+    {
+      "id": "warning", "type": "rectangle", "x": 280, "y": 300, "width": 160, "height": 50,
+      "strokeColor": "#e03131", "backgroundColor": "#ffe3e3", "fillStyle": "solid", "roughness": 1
+    },
+    {
+      "id": "lbl-warning", "type": "text", "x": 290, "y": 315, "width": 140, "height": 20,
+      "text": "⚠ MaxRequestWorkers", "fontSize": 12, "fontFamily": 1
+    },
+    {
+      "id": "lbl-warning2", "type": "text", "x": 300, "y": 330, "width": 120, "height": 16,
+      "text": "exhausted → 503", "fontSize": 12, "fontFamily": 1
+    },
+    {
+      "id": "lbl-title", "type": "text", "x": 60, "y": 80, "width": 480, "height": 36,
+      "text": "Level 0 — Apache + mod_php (Crash Baseline)", "fontSize": 24, "fontFamily": 1,
+      "strokeColor": "#e03131"
+    },
+    {
+      "id": "lbl-subtitle", "type": "text", "x": 60, "y": 120, "width": 480, "height": 20,
+      "text": "Every request spawns a full PHP process. 2GB RAM ÷ 40MB/worker = 50 max concurrent users.", "fontSize": 13, "fontFamily": 1
+    }
+  ],
+  "appState": {
+    "gridSize": null,
+    "viewBackgroundColor": "#ffffff"
+  }
+}

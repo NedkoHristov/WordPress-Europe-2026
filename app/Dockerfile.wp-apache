@@ -1,0 +1,23 @@
+# Level 0 — Apache + mod_php (intentionally untuned baseline)
+# This is the "before" state that gets crushed under load
+FROM wordpress:6.8-apache
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    less \
+    mariadb-client \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install WP-CLI
+RUN curl -sO https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
+    && chmod +x wp-cli.phar \
+    && mv wp-cli.phar /usr/local/bin/wp
+
+# Install Redis object cache plugin
+RUN wp package install wp-cli/wp-cli-bundle --allow-root 2>/dev/null || true
+
+COPY config/php/php-baseline.ini /usr/local/etc/php/conf.d/wp-baseline.ini
+COPY scripts/wp-setup.sh /usr/local/bin/wp-setup.sh
+COPY scripts/wp-bloat.sh /usr/local/bin/wp-bloat.sh
+COPY scripts/wp-perf-test.sh /usr/local/bin/wp-perf-test.sh
+RUN chmod +x /usr/local/bin/wp-setup.sh /usr/local/bin/wp-bloat.sh /usr/local/bin/wp-perf-test.sh

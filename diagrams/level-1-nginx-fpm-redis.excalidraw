@@ -1,0 +1,64 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://excalidraw.com",
+  "elements": [
+    {
+      "id": "lbl-title", "type": "text", "x": 40, "y": 40, "width": 620, "height": 36,
+      "text": "Level 1 — Nginx + PHP-FPM + OPcache + Redis", "fontSize": 22, "fontFamily": 1,
+      "strokeColor": "#2f9e44"
+    },
+    {
+      "id": "lbl-subtitle", "type": "text", "x": 40, "y": 80, "width": 620, "height": 20,
+      "text": "Process separation: Nginx handles connections, FPM handles PHP, Redis absorbs DB queries.", "fontSize": 13, "fontFamily": 1
+    },
+    {
+      "id": "browser", "type": "rectangle", "x": 20, "y": 160, "width": 100, "height": 60,
+      "strokeColor": "#1971c2", "backgroundColor": "#d0ebff", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-browser", "type": "text", "x": 45, "y": 183, "width": 60, "height": 20, "text": "Browser", "fontSize": 14, "fontFamily": 1
+    },
+    {
+      "id": "nginx", "type": "rectangle", "x": 180, "y": 140, "width": 120, "height": 100,
+      "strokeColor": "#2f9e44", "backgroundColor": "#d3f9d8", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-nginx", "type": "text", "x": 195, "y": 165, "width": 90, "height": 50,
+      "text": "Nginx\n1.27\n(event loop)", "fontSize": 13, "fontFamily": 1
+    },
+    {
+      "id": "fpm", "type": "rectangle", "x": 380, "y": 140, "width": 130, "height": 100,
+      "strokeColor": "#7950f2", "backgroundColor": "#f3d9fa", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-fpm", "type": "text", "x": 395, "y": 160, "width": 110, "height": 60,
+      "text": "PHP 8.3 FPM\npm.max=20\nOPcache ON", "fontSize": 12, "fontFamily": 1
+    },
+    {
+      "id": "redis", "type": "rectangle", "x": 380, "y": 300, "width": 130, "height": 60,
+      "strokeColor": "#c92a2a", "backgroundColor": "#ffe3e3", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-redis", "type": "text", "x": 405, "y": 323, "width": 80, "height": 20,
+      "text": "Redis 7\n(obj cache)", "fontSize": 13, "fontFamily": 1
+    },
+    {
+      "id": "mysql", "type": "rectangle", "x": 580, "y": 160, "width": 120, "height": 60,
+      "strokeColor": "#e67700", "backgroundColor": "#fff3bf", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3}
+    },
+    {
+      "id": "lbl-mysql", "type": "text", "x": 603, "y": 183, "width": 80, "height": 20,
+      "text": "MariaDB 11", "fontSize": 13, "fontFamily": 1
+    },
+    {
+      "id": "lbl-redis-note", "type": "text", "x": 380, "y": 380, "width": 200, "height": 20,
+      "text": "↑ ~70% DB queries absorbed here", "fontSize": 12, "fontFamily": 1, "strokeColor": "#c92a2a"
+    },
+    {
+      "id": "lbl-opcache-note", "type": "text", "x": 380, "y": 250, "width": 200, "height": 20,
+      "text": "opcache.validate_timestamps=0\n→ 0 stat() syscalls at runtime", "fontSize": 11, "fontFamily": 1, "strokeColor": "#7950f2"
+    }
+  ],
+  "appState": { "viewBackgroundColor": "#ffffff" }
+}
