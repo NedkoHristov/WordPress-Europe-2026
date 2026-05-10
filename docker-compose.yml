@@ -143,6 +143,7 @@ services:
       - --web.enable-remote-write-receiver
       - --query.max-samples=100000000
       - --storage.tsdb.retention.time=24h
+      - --enable-feature=native-histograms
     ports:
       - "9090:9090"
     volumes:
@@ -273,7 +274,7 @@ services:
     # No depends_on prometheus — k6 works standalone; remote-write is best-effort
     environment:
       K6_PROMETHEUS_RW_SERVER_URL: http://prometheus:9090/api/v1/write
-      K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: "false"
+      K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: "true"
       K6_OUT: experimental-prometheus-rw
     volumes:
       - ./load/k6:/scripts:ro
