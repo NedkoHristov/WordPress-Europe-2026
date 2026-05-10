@@ -56,10 +56,11 @@
     {
       "id": 5,
       "type": "stat",
-      "title": "OPcache Hit Ratio",
+      "title": "Slow Requests (>2s)",
+      "description": "Requests exceeding 2 second threshold — watch this during load spikes",
       "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
-      "fieldConfig": { "defaults": { "unit": "percentunit", "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "value": 0, "color": "red" }, { "value": 0.9, "color": "yellow" }, { "value": 0.98, "color": "green" }] } } },
-      "targets": [{ "datasource": "Prometheus", "expr": "phpfpm_opcache_statistics_hit_rate", "legendFormat": "Hit Rate" }]
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 5, "color": "yellow" }, { "value": 20, "color": "red" }] } } },
+      "targets": [{ "datasource": "Prometheus", "expr": "phpfpm_slow_requests_total", "legendFormat": "Slow Requests" }]
     },
     {
       "id": 6,
@@ -86,12 +87,13 @@
     {
       "id": 11,
       "type": "timeseries",
-      "title": "OPcache: Hit / Miss / Cached Files",
+      "title": "Request Duration by Process (p50/p95/max)",
+      "description": "Per-process request execution time distribution",
       "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
       "targets": [
-        { "datasource": "Prometheus", "expr": "phpfpm_opcache_statistics_hits_total", "legendFormat": "Hits" },
-        { "datasource": "Prometheus", "expr": "phpfpm_opcache_statistics_misses_total", "legendFormat": "Misses" },
-        { "datasource": "Prometheus", "expr": "phpfpm_opcache_statistics_cached_scripts", "legendFormat": "Cached Scripts" }
+        { "datasource": "Prometheus", "expr": "histogram_quantile(0.5, phpfpm_process_request_duration)", "legendFormat": "p50 {{process_id}}" },
+        { "datasource": "Prometheus", "expr": "histogram_quantile(0.95, phpfpm_process_request_duration)", "legendFormat": "p95 {{process_id}}" },
+        { "datasource": "Prometheus", "expr": "max(phpfpm_process_request_duration)", "legendFormat": "max" }
       ]
     },
     {
