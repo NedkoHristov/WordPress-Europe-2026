@@ -141,6 +141,10 @@ services:
       - --web.console.templates=/usr/share/prometheus/consoles
       - --web.enable-lifecycle
       - --web.enable-remote-write-receiver
+      - --query.max-samples=100000000
+      - --storage.tsdb.retention.time=24h
+    ports:
+      - "9090:9090"
     volumes:
       - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./observability/prometheus/rules.yml:/etc/prometheus/rules.yml:ro
@@ -203,7 +207,7 @@ services:
       - obs
 
   mysqld-exporter:
-    image: prom/mysqld-exporter:v0.15.1
+    image: prom/mysqld-exporter:v0.14.0
     restart: unless-stopped
     depends_on:
       db:
@@ -243,10 +247,11 @@ services:
   loki:
     image: grafana/loki:3.0.0
     restart: unless-stopped
+    user: "0:0"
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
       - ./observability/loki/loki.yml:/etc/loki/local-config.yaml:ro
-      - loki_data:/loki
+      - ./data/loki:/loki
     profiles:
       - obs
 
@@ -268,7 +273,7 @@ services:
     # No depends_on prometheus — k6 works standalone; remote-write is best-effort
     environment:
       K6_PROMETHEUS_RW_SERVER_URL: http://prometheus:9090/api/v1/write
-      K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: "true"
+      K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: "false"
       K6_OUT: experimental-prometheus-rw
     volumes:
       - ./load/k6:/scripts:ro
