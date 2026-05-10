@@ -1,0 +1,32 @@
+# MariaDB — Minimal configuration for $12 VPS (1GB RAM)
+# Conservative settings to coexist with PHP-FPM, Nginx, Redis, and system processes
+# On a 1GB VPS:
+#   - System: ~100MB
+#   - Redis: 64MB
+#   - PHP-FPM (8 workers × 40MB): 320MB
+#   - Nginx: ~50MB
+#   - MariaDB budget: remaining ~400MB
+
+[mysqld]
+# InnoDB buffer pool: lower allocation to leave room for other services
+innodb_buffer_pool_size = 128M
+innodb_buffer_pool_instances = 1
+innodb_log_file_size = 32M
+innodb_log_buffer_size = 8M
+
+# Connections
+max_connections = 50
+thread_cache_size = 5
+table_open_cache = 1024
+
+# Temp tables (sort, GROUP BY)
+tmp_table_size = 32M
+max_heap_table_size = 32M
+
+# Disable slow query log to reduce I/O overhead on VPS
+slow_query_log = 0
+long_query_time = 2
+
+# Query cache deprecated and disabled by default in MariaDB 11
+# Keeping explicit settings for clarity
+query_cache_type = 0
