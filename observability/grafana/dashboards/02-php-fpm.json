@@ -115,7 +115,7 @@
       "gridPos": { "x": 12, "y": 12, "w": 12, "h": 6 },
       "fieldConfig": { "defaults": { "unit": "decmbytes" } },
       "targets": [
-        { "datasource": "Prometheus", "expr": "container_memory_rss{name=~\".*wordpress.*fpm.*\"} / 1024 / 1024", "legendFormat": "FPM RSS" }
+        { "datasource": "Prometheus", "expr": "container_memory_rss{pod_name=~\".*fpm.*\"} / 1024 / 1024", "legendFormat": "{{pod_name}}" }
       ]
     }
   ],

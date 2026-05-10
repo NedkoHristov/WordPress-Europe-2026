@@ -42,47 +42,35 @@
     },
     {
       "id": 5,
-      "type": "piechart",
-      "title": "Nginx Request Rate Distribution",
-      "description": "Shows breakdown by HTTP status codes",
+      "type": "stat",
+      "title": "Total Requests (5m window)",
+      "description": "Cumulative requests in last 5 minutes",
       "gridPos": { "x": 16, "y": 0, "w": 8, "h": 8 },
-      "options": { "pieType": "donut", "displayLabels": ["name", "percent"] },
-      "fieldConfig": {
-        "overrides": [
-          { "matcher": { "id": "byName", "options": "2xx" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" }}] },
-          { "matcher": { "id": "byName", "options": "4xx" }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" }}] },
-          { "matcher": { "id": "byName", "options": "5xx" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" }}] }
-        ]
-      },
+      "fieldConfig": { "defaults": { "unit": "short" } },
       "targets": [
-        { "datasource": "Prometheus", "expr": "sum(increase(nginx_http_requests_total{status=~\"2..\"}[5m]))", "legendFormat": "2xx" },
-        { "datasource": "Prometheus", "expr": "sum(increase(nginx_http_requests_total{status=~\"4..\"}[5m]))", "legendFormat": "4xx" },
-        { "datasource": "Prometheus", "expr": "sum(increase(nginx_http_requests_total{status=~\"5..\"}[5m]))", "legendFormat": "5xx" }
+        { "datasource": "Prometheus", "expr": "increase(nginx_http_requests_total[5m])", "legendFormat": "Total Reqs" }
       ]
     },
     {
       "id": 10,
       "type": "timeseries",
-      "title": "Request Rate by Status Code",
+      "title": "Request Rate Over Time",
       "gridPos": { "x": 0, "y": 4, "w": 16, "h": 8 },
       "fieldConfig": { "defaults": { "unit": "reqps" } },
       "targets": [
-        { "datasource": "Prometheus", "expr": "sum(rate(nginx_http_requests_total{status=~\"2..\"}[30s]))", "legendFormat": "2xx (success)" },
-        { "datasource": "Prometheus", "expr": "sum(rate(nginx_http_requests_total{status=~\"3..\"}[30s]))", "legendFormat": "3xx (redirect)" },
-        { "datasource": "Prometheus", "expr": "sum(rate(nginx_http_requests_total{status=~\"4..\"}[30s]))", "legendFormat": "4xx (client error)" },
-        { "datasource": "Prometheus", "expr": "sum(rate(nginx_http_requests_total{status=~\"5..\"}[30s]))", "legendFormat": "5xx (server error — 502/504)" }
+        { "datasource": "Prometheus", "expr": "rate(nginx_http_requests_total[1m])", "legendFormat": "Requests/sec" },
+        { "datasource": "Prometheus", "expr": "rate(nginx_connections_accepted_total[1m])", "legendFormat": "Connections/sec" }
       ]
     },
     {
       "id": 20,
-      "type": "timeseries",
-      "title": "Request Volume & Success Rate",
-      "description": "Tracks total requests and 2xx success rate over time",
+      "type": "stat",
+      "title": "Current Connection State",
+      "description": "Reading + Writing + Waiting",
       "gridPos": { "x": 0, "y": 12, "w": 12, "h": 6 },
       "fieldConfig": { "defaults": { "unit": "short" } },
       "targets": [
-        { "datasource": "Prometheus", "expr": "sum(rate(nginx_http_requests_total[1m]))", "legendFormat": "RPS" },
-        { "datasource": "Prometheus", "expr": "sum(rate(nginx_http_requests_total{status=~\"2..\"}[1m]))", "legendFormat": "2xx RPS" }
+        { "datasource": "Prometheus", "expr": "nginx_connections_reading + nginx_connections_writing + nginx_connections_waiting", "legendFormat": "Total" }
       ]
     },
     {
