@@ -103,8 +103,8 @@
       "gridPos": { "x": 0, "y": 12, "w": 12, "h": 6 },
       "fieldConfig": { "defaults": { "unit": "reqps" } },
       "targets": [
-        { "datasource": "Prometheus", "expr": "rate(phpfpm_accepted_connections_total[30s])", "legendFormat": "FPM req/s" },
-        { "datasource": "Prometheus", "expr": "rate(phpfpm_slow_requests_total[30s])", "legendFormat": "Slow req/s (> 2s)" }
+        { "datasource": "Prometheus", "expr": "rate(phpfpm_accepted_connections[30s])", "legendFormat": "FPM req/s" },
+        { "datasource": "Prometheus", "expr": "rate(phpfpm_slow_requests[30s])", "legendFormat": "Slow req/s (> 2s)" }
       ]
     },
     {

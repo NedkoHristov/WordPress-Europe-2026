@@ -43,21 +43,21 @@
     {
       "id": 5,
       "type": "piechart",
-      "title": "Cache Status Distribution (HIT vs MISS vs BYPASS)",
-      "description": "Goal: Level 2 should show > 90% HIT. Screenshot this at peak load.",
+      "title": "Nginx Request Rate Distribution",
+      "description": "Shows breakdown by HTTP status codes",
       "gridPos": { "x": 16, "y": 0, "w": 8, "h": 8 },
       "options": { "pieType": "donut", "displayLabels": ["name", "percent"] },
       "fieldConfig": {
         "overrides": [
-          { "matcher": { "id": "byName", "options": "HIT" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" }}] },
-          { "matcher": { "id": "byName", "options": "MISS" }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" }}] },
-          { "matcher": { "id": "byName", "options": "BYPASS" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" }}] }
+          { "matcher": { "id": "byName", "options": "2xx" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" }}] },
+          { "matcher": { "id": "byName", "options": "4xx" }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" }}] },
+          { "matcher": { "id": "byName", "options": "5xx" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" }}] }
         ]
       },
       "targets": [
-        { "datasource": "Prometheus", "expr": "sum(increase(nginx_http_requests_total{cache_status=\"HIT\"}[5m]))", "legendFormat": "HIT" },
-        { "datasource": "Prometheus", "expr": "sum(increase(nginx_http_requests_total{cache_status=\"MISS\"}[5m]))", "legendFormat": "MISS" },
-        { "datasource": "Prometheus", "expr": "sum(increase(nginx_http_requests_total{cache_status=\"BYPASS\"}[5m]))", "legendFormat": "BYPASS" }
+        { "datasource": "Prometheus", "expr": "sum(increase(nginx_http_requests_total{status=~\"2..\"}[5m]))", "legendFormat": "2xx" },
+        { "datasource": "Prometheus", "expr": "sum(increase(nginx_http_requests_total{status=~\"4..\"}[5m]))", "legendFormat": "4xx" },
+        { "datasource": "Prometheus", "expr": "sum(increase(nginx_http_requests_total{status=~\"5..\"}[5m]))", "legendFormat": "5xx" }
       ]
     },
     {
@@ -76,15 +76,14 @@
     {
       "id": 20,
       "type": "timeseries",
-      "title": "Cache Hit Rate % over time",
-      "description": "Watch this climb from 0% to 90%+ as the cache warms up. Screenshot at peak.",
+      "title": "Request Volume & Success Rate",
+      "description": "Tracks total requests and 2xx success rate over time",
       "gridPos": { "x": 0, "y": 12, "w": 12, "h": 6 },
-      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1 } },
-      "targets": [{
-        "datasource": "Prometheus",
-        "expr": "sum(rate(nginx_http_requests_total{cache_status=\"HIT\"}[1m])) / sum(rate(nginx_http_requests_total[1m]))",
-        "legendFormat": "Cache Hit Rate"
-      }]
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "sum(rate(nginx_http_requests_total[1m]))", "legendFormat": "RPS" },
+        { "datasource": "Prometheus", "expr": "sum(rate(nginx_http_requests_total{status=~\"2..\"}[1m]))", "legendFormat": "2xx RPS" }
+      ]
     },
     {
       "id": 21,
@@ -95,7 +94,7 @@
       "fieldConfig": { "defaults": { "unit": "reqps" } },
       "targets": [
         { "datasource": "Prometheus", "expr": "sum(rate(nginx_http_requests_total[30s]))", "legendFormat": "Total RPS (Nginx)" },
-        { "datasource": "Prometheus", "expr": "rate(phpfpm_accepted_connections_total[30s])", "legendFormat": "RPS hitting PHP-FPM" }
+        { "datasource": "Prometheus", "expr": "rate(phpfpm_accepted_connections[30s])", "legendFormat": "RPS hitting PHP-FPM" }
       ]
     }
   ],
