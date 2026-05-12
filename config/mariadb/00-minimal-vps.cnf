@@ -1,23 +1,23 @@
-# MariaDB — Minimal configuration for $12 VPS (1GB RAM)
-# Conservative settings to coexist with PHP-FPM, Nginx, Redis, and system processes
-# On a 1GB VPS:
-#   - System: ~100MB
-#   - Redis: 64MB
-#   - PHP-FPM (8 workers × 40MB): 320MB
-#   - Nginx: ~50MB
-#   - MariaDB budget: remaining ~400MB
+# MariaDB — Minimal configuration for $12 DigitalOcean Droplet (2GB RAM)
+# Optimized settings to maximize throughput while leaving room for PHP-FPM, Nginx, Redis
+# On a 2GB VPS:
+#   - System: ~150MB
+#   - Redis: 128MB
+#   - PHP-FPM (12 workers × 40MB): 480MB
+#   - Nginx: ~75MB
+#   - MariaDB budget: 256-512MB (using 256MB for safety)
 
 [mysqld]
-# InnoDB buffer pool: lower allocation to leave room for other services
-innodb_buffer_pool_size = 128M
-innodb_buffer_pool_instances = 1
-innodb_log_file_size = 32M
-innodb_log_buffer_size = 8M
+# InnoDB buffer pool: bigger pool = better cache hit rate = fewer disk reads
+innodb_buffer_pool_size = 256M
+innodb_buffer_pool_instances = 2
+innodb_log_file_size = 64M
+innodb_log_buffer_size = 16M
 
 # Connections
-max_connections = 50
-thread_cache_size = 5
-table_open_cache = 1024
+max_connections = 100
+thread_cache_size = 10
+file_open_cache = 2048
 
 # Temp tables (sort, GROUP BY)
 tmp_table_size = 32M

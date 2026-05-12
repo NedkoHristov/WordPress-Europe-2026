@@ -4,7 +4,7 @@
 #
 # PRODUCTION CONFIGURATION
 # ========================
-# Optimized for 1GB RAM environment
+# Optimized for 2GB RAM environment ($12 DigitalOcean Droplet)
 # All exporters expose metrics for remote Prometheus scraping
 # No local observability stack (Prometheus, Grafana, Loki)
 #
@@ -54,8 +54,8 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    # Reduced memory limit for VPS environment
-    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru --save ""
+    # Optimized memory limit for 2GB VPS environment
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru --save ""
     volumes:
       - redis_data:/data
     expose:
@@ -81,9 +81,9 @@ services:
       - ./config/php/opcache.ini:/usr/local/etc/php/conf.d/opcache.ini:ro
       - ./plugins:/var/www/html/wp-content/plugins/custom:ro
       - fastcgi_cache:/var/cache/nginx
-    # Resource limits for 1GB VPS
-    # FPM pool: 4-8 workers (vs 20 on dev machine)
-    # Memory: ~35-40MB per worker = 140-320MB total for FPM
+    # Resource limits for 2GB VPS
+    # FPM pool: 4-10 spare workers, max 12 (vs 20 on dev machine)
+    # Memory: ~40MB per worker = 480MB total for FPM at peak
 
   # ─── WEB SERVER ───────────────────────────────────────────────────────────
   nginx:
