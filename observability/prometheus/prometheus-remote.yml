@@ -1,0 +1,70 @@
+# Prometheus configuration for remote scraping of $12 VPS metrics
+# Usage: Set VPS_IP environment variable before running Prometheus
+#   Example: VPS_IP=192.0.2.100 docker compose -f docker-compose.obs-remote.yml up -d
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'wordpress-europe-2026-vps'
+    environment: 'production'
+
+# Alerting configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - /etc/prometheus/rules.yml
+
+scrape_configs:
+  # ─── NODE EXPORTER ──────────────────────────────────────────────────────
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['${VPS_IP}:9100']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: '$VPS_IP'
+      - source_labels: [__scheme__]
+        target_label: scheme
+        replacement: 'http'
+
+  # ─── MYSQL EXPORTER ─────────────────────────────────────────────────────
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['${VPS_IP}:9104']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: '$VPS_IP'
+
+  # ─── REDIS EXPORTER ─────────────────────────────────────────────────────
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['${VPS_IP}:9121']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: '$VPS_IP'
+
+  # ─── NGINX EXPORTER ─────────────────────────────────────────────────────
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['${VPS_IP}:9113']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: '$VPS_IP'
+
+  # ─── PHP-FPM EXPORTER ───────────────────────────────────────────────────
+  - job_name: 'php-fpm'
+    static_configs:
+      - targets: ['${VPS_IP}:8118']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: '$VPS_IP'

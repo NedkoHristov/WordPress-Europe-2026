@@ -1,0 +1,109 @@
+###############################################################################
+# WordPress Europe 2026 — Remote Observability Stack for $12 VPS
+# Nedko Hristov — github.com/NedkoHristov/WordPress-Europe-2026
+#
+# OBSERVABILITY SERVER CONFIGURATION
+# ===================================
+# Runs on separate DigitalOcean Droplet (can be $5 Basic, or shared server)
+# Prometheus scrapes metrics from remote $12 VPS instance
+# Grafana displays 6 dashboards with metrics from the production instance
+#
+# DEPLOYMENT:
+#   docker compose -f docker-compose.obs-remote.yml up -d
+#
+# CONFIGURATION:
+#   Set environment variables before running:
+#   - VPS_IP: IP address of $12 droplet running minimal WordPress stack
+#   - Example: VPS_IP=192.0.2.100 docker compose -f docker-compose.obs-remote.yml up -d
+#
+# PROMETHEUS TARGETS (scraped from VPS_IP):
+#   • http://$VPS_IP:9100/metrics (Node Exporter)
+#   • http://$VPS_IP:9104/metrics (MySQL Exporter)
+#   • http://$VPS_IP:9113/metrics (Nginx Exporter)
+#   • http://$VPS_IP:8118/metrics (PHP-FPM Exporter)
+#   • http://$VPS_IP:9121/metrics (Redis Exporter)
+#
+###############################################################################
+
+services:
+
+  # ─── PROMETHEUS (Scrapes Remote $12 VPS) ──────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.console.libraries=/usr/share/prometheus/console_libraries
+      - --web.console.templates=/usr/share/prometheus/consoles
+      - --web.enable-lifecycle
+      - --query.max-samples=100000000
+      - --storage.tsdb.retention.time=30d
+      - --enable-feature=native-histograms
+    ports:
+      - "9090:9090"
+    environment:
+      # VPS_IP: Set at runtime (e.g., VPS_IP=192.0.2.100)
+      # Fallback to localhost for testing
+      VPS_IP: ${VPS_IP:-localhost}
+    volumes:
+      - ./observability/prometheus/prometheus-remote.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/prometheus/rules.yml:/etc/prometheus/rules.yml:ro
+      - prometheus_data:/prometheus
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9090/-/ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ─── GRAFANA (Shows Remote $12 Metrics) ────────────────────────────────────
+  grafana:
+    image: grafana/grafana:11.0.0
+    restart: unless-stopped
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: grafana
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/01-overview.json
+      GF_SERVER_ROOT_URL: http://localhost:3000
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+
+  # ─── LOKI (Log Aggregation from Remote VPS) ────────────────────────────────
+  loki:
+    image: grafana/loki:3.0.0
+    restart: unless-stopped
+    user: "0:0"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./observability/loki/loki.yml:/etc/loki/local-config.yaml:ro
+      - ./data/loki:/loki
+    # Note: Promtail runs separately to collect logs from remote VPS via network volumes
+    # (This requires SSH/rsyslog setup — optional for basic observability)
+
+  # ─── PROMETHEUS ALERTMANAGER (Optional) ────────────────────────────────────
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+  alertmanager_data:
