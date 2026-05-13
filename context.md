@@ -239,3 +239,74 @@ The repository is now **production-ready** for the WordPress Europe 2026 talk:
 3. `make setup && make bloat` → seed database (if needed mid-presentation)
 4. `make load-smoke` or `make load-crash` → trigger k6 load while presenting dashboards
 
+---
+
+## Session Fixes Applied (2026-05-13)
+
+### Screenshot Automation — Playwright Navigation Fix ✅
+
+**Problem:** `page.goto()` with default `waitUntil: 'load'` timed out at 10s on Grafana dashboards. Grafana aborts many Prometheus queries when navigating away, causing ERR_ABORTED floods that prevent the `load` event from firing.
+
+**Fix:** Use `{ waitUntil: 'domcontentloaded', timeout: 30000 }` + `await page.waitForTimeout(7000)` after navigation to allow panels to render.
+
+**Working Playwright pattern:**
+```javascript
+await page.setViewportSize({ width: 1920, height: 1080 });
+await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+await page.waitForTimeout(7000);
+await page.screenshot({ path: filePath, fullPage: true });
+```
+
+**Note:** `kiosk=1` causes layout issues at 1920px wide (panels stack narrow). Use **no kiosk** + `fullPage: true` for best screenshots. Time range: use epoch ms (`from=1778621317626`) for fixed ranges rather than `now-5m`.
+
+### k6 Level 1 Test Results (Nginx + PHP-FPM + Redis, no FastCGI cache) ✅
+
+**Command:**
+```bash
+docker compose --profile nginx --profile obs --profile load run --rm --name wp-k6-compare k6 run /scripts/level-compare.js
+```
+
+**Results at 50 VU (3m30s ramp, 14k posts DB):**
+- RPS (avg): **3.1 req/s**
+- P95 latency: **10,760 ms** ← crushed under load
+- Error rate: **87.7%** ← almost entirely timeouts
+- Exit code: 99 (thresholds crossed)
+
+**Interpretation:** Level 1 baseline is the "before" story — Nginx + PHP-FPM + Redis Object Cache alone cannot handle 50 VU on a $12 VPS. Every request hits PHP-FPM → MariaDB. PHP-FPM workers saturate, queue fills, timeouts cascade.
+
+### Level 1 Screenshots ✅ COMPLETE
+
+All 6 dashboards captured to `screenshots/l1-*.png`:
+- `l1-06-k6-live.png` — VU ramp, RPS, P95 latency, error rate spike
+- `l1-01-overview.png` — System overview: RPS 0.2, high CPU, memory
+- `l1-02-php-fpm.png` — FPM workers: Active 1, Idle 11 (post-test)
+- `l1-04-nginx.png` — Nginx: Active Connections, no cache hit data
+- `l1-05-redis.png` — Redis object cache: **90.7% hit ratio**, 1.75 MB used
+- `l1-03-mysql.png` — MariaDB: threads, queries
+
+### k6 Script: level-compare.js ✅
+
+**Location:** `load/k6/level-compare.js`  
+**Syntax fix:** k6 v0.52.0 Babel does not support optional chaining (`?.`). All `data?.metrics?.x` replaced with explicit null checks.  
+**BASE_URL:** `http://nginx:80` (docker network service name, not localhost)  
+**Stages:** 1→10→30→50 VU ramp over 3m30s, then ramp down  
+**Prometheus remote-write:** `http://prometheus:9090/api/v1/write`  
+**Note:** `K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM` must be `"false"` (native histograms disabled in Prometheus v2.52.0)
+
+### Current Status (2026-05-13)
+
+**✅ Done:**
+- Level 1 k6 test run and results recorded
+- Level 1 screenshots (6 dashboards) saved to `screenshots/l1-*.png`
+
+**🔲 TODO Next:**
+1. Switch to Level 2 (FastCGI cache + MariaDB tuning):
+   ```bash
+   NGINX_CONF=nginx-cache.conf MARIADB_CONFIG=10-tuned.cnf \
+     docker compose --profile nginx --profile obs up -d --force-recreate
+   ```
+2. Run level-compare.js again → expect P95 < 500ms, error rate < 5%
+3. Take 6 screenshots → `screenshots/l2-*.png`
+4. Key dashboard to show: `wp-nginx-cache` (04) — cache HIT rate ~80-95%
+5. Switch to Level 0 (Apache, crash scenario) and repeat
+
