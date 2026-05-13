@@ -1,7 +1,7 @@
 # Context — WordPress Europe 2026 Repo
 
-> **Last updated:** 2026-05-13  
-> **Status:** ✅ Screenshots complete for L0, L1, L2 — Pending: PRESENTATION_OUTLINE.md, remaining code tasks
+> **Last updated:** 2026-05-13
+> **Status:** ✅ Screenshots done for L0, L1, L2 — Pending: PRESENTATION_OUTLINE.md + 4 small code tasks
 > **Purpose:** Session continuity — paste this into any AI tool to resume work.
 
 ## Talk
@@ -15,18 +15,18 @@
 ## Repo
 
 - **GitHub:** https://github.com/NedkoHristov/WordPress-Europe-2026
-- **Local path:** `/Users/nedko/repo/WordPress-Europe-2026`
+- **Local path (WSL2):** `/home/nedko/repo/personal/WordPress-Europe-2026`
 - **Branch:** `develop`
 - **Reference repo (security talk):** https://github.com/NedkoHristov/WordPress-Security-or-keep-yourself-positive-dev-bg-webinar
 
-## Architecture — The 6 Levels
+## Architecture — The Levels
 
 | Level | Stack | Make target |
 |---|---|---|
 | 0 | Apache + mod_php (crash baseline) | `make level-0` |
 | 1 | Nginx + PHP-FPM + OPcache + Redis | `make level-1` |
 | 2 | Level 1 + FastCGI page cache + MariaDB tuning | `make level-2` |
-| 3 | Level 2 + Cloudflare CDN (edge cache via tunnel) | `make level-3` *(pending)* |
+| 3 | Level 2 + Cloudflare CDN (edge cache via tunnel) | `make level-3` *(pending token)* |
 | 4 | Level 2 + hybrid-static (Simply Static export) | `make level-4` |
 
 ## Docker Compose Profiles
@@ -39,15 +39,15 @@
 | `load` | k6 load generator |
 | `static` | static-site nginx (Level 4) |
 
-## Files Created (2026-05-08)
+## Repo File Structure
 
 ```
 docker-compose.yml                          # all profiles
 Makefile                                    # make level-0..4, load-*, obs-up
 README.md                                   # quick start + level matrix
 SCREENSHOT_GUIDE.md                         # step-by-step screenshot walkthrough
-PRESENTATION_OUTLINE.md                     # (to be created — full talk script)
 context.md                                  # this file
+package.json                                # npm — playwright dependency (screenshot automation)
 
 app/
   Dockerfile.wp-apache                      # Level 0
@@ -60,7 +60,7 @@ config/
   php/php-tuned.ini                         # Level 1+
   php/opcache.ini                           # OPcache config
   php/www.conf                              # FPM pool (pm.max_children=20)
-  mariadb/00-baseline.cnf                   # Level 0 (default)
+  mariadb/00-baseline.cnf                   # Level 0/1 (default)
   mariadb/10-tuned.cnf                      # Level 2 (512MB buffer pool, slow log)
 
 observability/
@@ -73,11 +73,12 @@ observability/
   grafana/dashboards/03-mysql.json          # Threads, buffer pool, slow queries
   grafana/dashboards/04-nginx-cache.json    # HIT/MISS/BYPASS donut + rate
   grafana/dashboards/05-redis.json          # Hit ratio, memory, evictions
-  grafana/dashboards/06-k6-live.json        # VUs, RPS, p50/p95/p99, errors
+  grafana/dashboards/06-k6-live.json        # VUs, RPS, p99, errors (fixed PromQL)
   loki/loki.yml
   promtail/promtail.yml
 
 load/k6/
+  level-compare.js                          # 50-VU ramp (3m30s) — main comparison script
   black-friday.js                           # 0→500 VU ramp (crash scenario)
   spike.js                                  # instant 500 VU
   soak.js                                   # 1h flat 50 VU
@@ -87,35 +88,41 @@ load/k6/
 
 scripts/
   wp-setup.sh                               # idempotent WP + WooCommerce install
-  wp-bloat.sh                               # 2.5k posts + 5k revisions, 500 products + 1.5k revisions, transients
+  wp-bloat.sh                               # 2.5k posts + 5k revisions, 500 products + 1.5k revisions
   wp-perf-test.sh                           # before/after JSON snapshot
+  screenshot.js                             # Playwright: capture 6 Grafana dashboards
 
 static/
   build.sh                                  # wget crawler → static export
   nginx-static.conf                         # serves Level 4 static export
 
 diagrams/
-  level-0-apache-baseline.excalidraw        # Act I diagram
-  level-1-nginx-fpm-redis.excalidraw        # Act II diagram
-  level-2-fastcgi-cache.excalidraw          # Act III diagram
-  level-4-hybrid-static.excalidraw          # Act IV diagram
-  cache-hierarchy.excalidraw                # Full cache pyramid
-  fpm-pool-math.excalidraw                  # pm.max_children formula
+  level-0-apache-baseline.excalidraw
+  level-1-nginx-fpm-redis.excalidraw
+  level-2-fastcgi-cache.excalidraw
+  level-4-hybrid-static.excalidraw
+  cache-hierarchy.excalidraw
+  fpm-pool-math.excalidraw
+
+screenshots/
+  l0-01-overview.png .. l0-06-k6-live.png  # Level 0 Apache baseline ✅
+  l1-01-overview.png .. l1-06-k6-live.png  # Level 1 Nginx+FPM+Redis ✅
+  l2-01-overview.png .. l2-06-k6-live.png  # Level 2 FastCGI cache ✅
 ```
 
 ## What Still Needs Doing
 
-- [ ] PRESENTATION_OUTLINE.md (full talk script with speaker notes)
-- [ ] `results/screenshots/` folder with `.gitkeep`
-- [ ] Add `blackbox_exporter` service to docker-compose.yml (probe HTTP endpoints)
+- [ ] `PRESENTATION_OUTLINE.md` — full talk script with speaker notes
+- [ ] `results/screenshots/.gitkeep` — create the folder + placeholder
+- [ ] Add `blackbox_exporter` service to `docker-compose.yml` (probe HTTP endpoints)
 - [ ] Add `simply-static` plugin auto-activation to `scripts/wp-setup.sh`
-- [ ] Fix `make level-0` to auto-stop nginx profile (prevent port conflict)
+- [ ] Fix `make level-0` to auto-stop nginx profile before starting apache (prevent port 8080 conflict)
 - [ ] `.env.example` file
 
-### Cloudflare CDN — Level 3 (in progress)
+## Cloudflare CDN — Level 3 (blocked on token)
 
 - **Domain:** `nedko.net`, subdomain `wp.nedko.net`
-- **Approach:** `cloudflared` container in a `cdn` Docker Compose profile dials out to CF Zero Trust tunnel — no VPS, no public IP, works from laptop
+- **Approach:** `cloudflared` container in a `cdn` Docker Compose profile dials out to CF Zero Trust tunnel
 - **Traffic path:** `k6 → https://wp.nedko.net → CF edge → cloudflared container → nginx:80`
 - **Cloudflare setup steps (one-time manual):**
   1. Zero Trust → Networks → Tunnels → Create tunnel `wp-stress-demo` → copy token
@@ -124,11 +131,9 @@ diagrams/
   4. SSL/TLS → Edge Certs → disable "Always Use HTTPS" (avoids redirect loops)
 - **Code to add once token is ready:**
   - `docker-compose.yml`: new `cloudflared` service under `cdn` profile
-  - `Makefile`: `make level-3`, `make load-cdn`, `make cdn-url-set`/`cdn-url-unset`
-  - `diagrams/level-3-cloudflare.excalidraw`
-  - `SCREENSHOT_GUIDE.md`: new ACT III (before: 80% CPU; after: <5% CPU same VUs)
-  - Add `CLOUDFLARE_TUNNEL_TOKEN=` to `.env.example`
-- **Status:** Cloudflare dashboard setup in progress. Implementation ready to build once tunnel token obtained.
+  - `Makefile`: `make level-3`, `make load-cdn`
+  - Add `CLOUDFLARE_TUNNEL_TOKEN=` to `.env` / `.env.example`
+- **Status:** Blocked — no tunnel token yet.
 
 ## Key URLs When Running
 
@@ -137,9 +142,10 @@ diagrams/
 | WordPress frontend | http://localhost:8080 | — |
 | WordPress admin | http://localhost:8080/wp-admin | admin / admin123 |
 | Grafana | http://localhost:3000 | admin / grafana |
+| Prometheus | http://localhost:9090 | — |
 | Static site (Level 4) | http://localhost:8090 | — |
 
-## Grafana Dashboard UIDs (for direct links)
+## Grafana Dashboard UIDs
 
 | Dashboard | UID | Direct URL |
 |---|---|---|
@@ -153,158 +159,114 @@ diagrams/
 ## Key Design Decisions
 
 1. **No terminal confirmation prompts** — all commands use `| cat` or are non-interactive
-2. **Excalidraw diagrams** as `.excalidraw` JSON files — open at excalidraw.com, commit alongside PNGs
+2. **Excalidraw diagrams** as `.excalidraw` JSON files — open at excalidraw.com
 3. **Makefile as the single interface** — audience can follow along with `make level-N`
 4. **k6 → Prometheus remote-write** — real-time load metrics in Grafana during live demos
-5. **Same repo structure as security talk** — familiar to returning audience
-6. **All profiles independent** — `obs` profile works with both `apache` and `nginx`
+5. **All profiles independent** — `obs` profile works with both `apache` and `nginx`
 
-## Bug Fixes Applied (2026-05-09)
+## Demo Data Status
 
-- **Script permissions:** Removed bind-mounts of `scripts/` from docker-compose.yml — scripts are `COPY`'d + `chmod +x` in Dockerfile; mounts were overriding without +x
-- **WP 6.8:** Both Dockerfiles updated from `6.5` → `6.8` (WooCommerce/Yoast require 6.8+)
-- **k6 `depends_on` removed:** k6 service had `depends_on: prometheus` which broke `--profile load` without obs
-- **k6 BASE_URL:** All `load-*` Makefile targets pass `-e BASE_URL=http://host.docker.internal:$(WP_PORT_VALUE)` so k6 reaches host-bound WP port
-- **nginx-exporter `depends_on` removed:** Was referencing `nginx` service unavailable under `--profile apache`
-- **Prometheus healthcheck:** Added `wget -qO- http://localhost:9090/-/ready` healthcheck + `--web.enable-remote-write-receiver` CLI flag
-- **Grafana `depends_on`:** Changed to `condition: service_healthy` so Grafana waits for Prometheus
-- **wp-bloat.sh speed:** Replaced all shell `for` loops calling WP-CLI per-row with single `wp eval` PHP loops. Reduced products 3000→500. Eliminated per-product image imports. Runtime: 45+ min → ~2-4 min
-- **Comment spam loop:** Same fix — replaced 750× `wp comment update` loop with single `wp eval` SQL UPDATE
-
-## Session Fixes Applied (2026-05-10)
-
-### Point 2: Debug k6 Remote Write (RESOLVED) ✅
-
-**Problem:** k6 load tests completed successfully (213 requests) but metrics weren't appearing in Prometheus. Prometheus logs showed:
-```
-ts=2026-05-10T19:23:19.183Z caller=write_handler.go:77 level=error component=web 
-msg="Error appending remote write" err="native histograms are disabled"
-```
-
-**Root Cause:** k6 was configured to send metrics using native histograms (`K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: "true"`), but Prometheus v2.52.0 had this feature disabled.
-
-**Solution Applied:**
-
-1. **docker-compose.yml — Prometheus service:**
-   - Added `ports: "9090:9090"` to expose metrics endpoint to host
-   - Added `--query.max-samples=100000000` flag to handle high-volume metrics
-   - Added `--storage.tsdb.retention.time=24h` for explicit retention
-
-2. **docker-compose.yml — k6 service:**
-   - Changed `K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: "true"` → `"false"`
-
-**Result:**
-- ✅ k6 metrics now flowing successfully to Prometheus
-- ✅ Load test verified: 117 requests collected, 100% success rate
-- ✅ `k6_vus` metric confirmed in Prometheus query results
-- ✅ No more 500 errors in Prometheus write handler logs
-
-### Metrics Collection Status (Post-Fix)
-
-**✅ Working Metrics:**
-- k6_vus (active virtual users during load test)
-- k6_http_requests_total
-- k6_http_req_duration
-- mysql_global_status_threads_running
-- redis_connected_clients
-- node_memory_MemTotal_bytes
-- container_cpu_usage_seconds_total
-
-**❓ Pending Verification:**
-- phpfpm_processes_active (exporter running, needs verification)
-- nginx_cache_hits_total (requires Nginx L2+ load test)
-
-### Demo Data Status
-
-- ✅ WordPress 6.8 installed with WooCommerce, Yoast SEO, Redis Cache
-- ✅ Database seeded: 14,041 posts (2,500 + 8,000 revisions), 1,010 products, 1,501 comments
-- ✅ All 6 Grafana dashboards provisioned and auto-provisioned
+- ✅ WordPress 6.8 installed with WooCommerce, Yoast SEO, Redis Object Cache
+- ✅ Database seeded: ~14K posts (2,500 + revisions), 1,010 products, 1,501 comments
+- ✅ All 6 Grafana dashboards provisioned and auto-loaded
 - ✅ Full observability stack healthy: Prometheus, Grafana, Loki, 8 exporters
-- ✅ Load test framework operational: k6, black-friday, spike, soak, browse profiles
 
-### Ready for Presentation
+## Load Test Results
 
-The repository is now **production-ready** for the WordPress Europe 2026 talk:
-- Docker Compose fully operational with all profiles tested
-- Metrics collecting correctly across all 6 dashboards
-- Demo data realistic: 14K posts, 1K products, 1.5K comments
-- Screenshots captured with live metric data
-- SLIDES-RICH.md presentation deck ready for export
+### level-compare.js — 50 VU ramp (3m30s), 14k posts DB
 
-**Next Steps for Presenter:**
-1. `marp --pptx --allow-local-files SLIDES-RICH.md` → export to PowerPoint for delivery
-2. `docker compose --profile apache --profile obs up -d` → warm up infrastructure before talk
-3. `make setup && make bloat` → seed database (if needed mid-presentation)
-4. `make load-smoke` or `make load-crash` → trigger k6 load while presenting dashboards
+| Level | RPS | P95 Latency | Error Rate | Notes |
+|---|---|---|---|---|
+| **L0** Apache+mod_php | 13.3 req/s | 2381 ms | 0% (threshold hit) | Slow but doesn't crash on localhost |
+| **L1** Nginx+FPM+Redis | 3.1 req/s | 10,760 ms | 87.7% | PHP-FPM saturates, timeouts cascade |
+| **L2** +FastCGI+MariaDB tuning | 23.0 req/s | 67 ms | 0% | 160× latency drop vs L1 |
 
----
+**Talk narrative:** L1 is the "before" — looks modern but collapses under load. L2 is the cache fix — same stack, 160× faster. L0 shows Apache's raw baseline for context.
 
-## Session Fixes Applied (2026-05-13)
+## All Screenshots
 
-### Screenshot Automation — Playwright Navigation Fix ✅
+| Prefix | Level | Status |
+|---|---|---|
+| `screenshots/l0-*.png` (6 files) | Apache baseline | ✅ |
+| `screenshots/l1-*.png` (6 files) | Nginx+FPM+Redis | ✅ |
+| `screenshots/l2-*.png` (6 files) | +FastCGI cache+MariaDB tuning | ✅ |
+| `screenshots/l3-*.png` | +Cloudflare CDN | ⏸ blocked |
+| `screenshots/l4-*.png` | +Hybrid static | 🔲 not run |
 
-**Problem:** `page.goto()` with default `waitUntil: 'load'` timed out at 10s on Grafana dashboards. Grafana aborts many Prometheus queries when navigating away, causing ERR_ABORTED floods that prevent the `load` event from firing.
+## Screenshot Automation
 
-**Fix:** Use `{ waitUntil: 'domcontentloaded', timeout: 30000 }` + `await page.waitForTimeout(7000)` after navigation to allow panels to render.
+**Script:** `scripts/screenshot.js` (Playwright)
+**Usage:** `node scripts/screenshot.js <prefix> <from_epoch_ms> <to_epoch_ms>`
+**Example:** `node scripts/screenshot.js l2 1778678880000 1778679240000`
 
-**Working Playwright pattern:**
-```javascript
-await page.setViewportSize({ width: 1920, height: 1080 });
-await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-await page.waitForTimeout(7000);
-await page.screenshot({ path: filePath, fullPage: true });
+- Logs into Grafana (admin/grafana), captures 6 dashboards in order
+- Order: k6-live → overview → php-fpm → mysql → nginx-cache → redis
+- Saved as: `screenshots/<prefix>-01-overview.png` … `<prefix>-06-k6-live.png`
+- Requires `playwright` npm package (installed — `node_modules/` present at repo root)
+- Chromium cached at `~/.cache/ms-playwright/chromium-1223/`
+- Pattern: `waitUntil: 'domcontentloaded'` + 7s wait (not `'load'` — Grafana aborts queries on nav)
+- Do NOT use `kiosk=1` — causes narrow panel stacking at 1920px
+
+## Known Bugs & Workarounds
+
+### make level-0 — port conflict (UNRESOLVED)
+
+`make level-0` runs `docker compose --profile apache down` but does NOT stop the `nginx` profile.
+If nginx is up, port 8080 is already allocated → Apache container starts but port binding silently
+fails (`NetworkSettings.Ports` is empty even though `HostConfig.PortBindings` is set).
+
+**Workaround:** `docker compose --profile nginx down && make level-0`
+
+**Fix needed in Makefile:**
+```makefile
+level-0:
+	$(COMPOSE) --profile nginx down 2>/dev/null || true   # ADD THIS LINE
+	$(COMPOSE) --profile apache --profile obs up -d --build
 ```
 
-**Note:** `kiosk=1` causes layout issues at 1920px wide (panels stack narrow). Use **no kiosk** + `fullPage: true` for best screenshots. Time range: use epoch ms (`from=1778621317626`) for fixed ranges rather than `now-5m`.
+### Prometheus "out of order sample" after stack restart
 
-### k6 Level 1 Test Results (Nginx + PHP-FPM + Redis, no FastCGI cache) ✅
+If `prometheus_data` volume has data from a previous run and you restart with a new test, k6
+metrics get 400 errors ("out of order sample"). Fix: clear the volume before re-running.
 
-**Command:**
 ```bash
-docker compose --profile nginx --profile obs --profile load run --rm --name wp-k6-compare k6 run /scripts/level-compare.js
+docker compose --profile apache --profile obs down
+docker volume rm wordpress-europe-2026_prometheus_data
+docker compose --profile apache --profile obs up -d
 ```
 
-**Results at 50 VU (3m30s ramp, 14k posts DB):**
-- RPS (avg): **3.1 req/s**
-- P95 latency: **10,760 ms** ← crushed under load
-- Error rate: **87.7%** ← almost entirely timeouts
-- Exit code: 99 (thresholds crossed)
+### k6 Prometheus remote-write — native histograms disabled
 
-**Interpretation:** Level 1 baseline is the "before" story — Nginx + PHP-FPM + Redis Object Cache alone cannot handle 50 VU on a $12 VPS. Every request hits PHP-FPM → MariaDB. PHP-FPM workers saturate, queue fills, timeouts cascade.
+`K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM` must be `"false"`. Prometheus v2.52.0 has
+`--enable-feature=native-histograms` in its command but the remote-write receiver rejects them
+with 400. k6 sends pre-calculated percentiles instead: `k6_http_req_duration_p99`,
+`k6_http_req_failed_rate`, etc.
 
-### Level 1 Screenshots ✅ COMPLETE
+### k6 BASE_URL — canonical redirect loop
 
-All 6 dashboards captured to `screenshots/l1-*.png`:
-- `l1-06-k6-live.png` — VU ramp, RPS, P95 latency, error rate spike
-- `l1-01-overview.png` — System overview: RPS 0.2, high CPU, memory
-- `l1-02-php-fpm.png` — FPM workers: Active 1, Idle 11 (post-test)
-- `l1-04-nginx.png` — Nginx: Active Connections, no cache hit data
-- `l1-05-redis.png` — Redis object cache: **90.7% hit ratio**, 1.75 MB used
-- `l1-03-mysql.png` — MariaDB: threads, queries
+k6 must use `http://host.docker.internal:8080` (NOT `http://nginx:80`). WordPress siteurl is
+`http://localhost:8080`. When `Host: nginx` arrives, WP issues a 301 to `http://nginx:8080/`
+→ k6 follows → connection refused.
 
-### k6 Script: level-compare.js ✅
+Requires `extra_hosts: ["host.docker.internal:host-gateway"]` in the k6 service
+(WSL2/Linux does not define this automatically).
 
-**Location:** `load/k6/level-compare.js`  
-**Syntax fix:** k6 v0.52.0 Babel does not support optional chaining (`?.`). All `data?.metrics?.x` replaced with explicit null checks.  
-**BASE_URL:** `http://nginx:80` (docker network service name, not localhost)  
-**Stages:** 1→10→30→50 VU ramp over 3m30s, then ramp down  
-**Prometheus remote-write:** `http://prometheus:9090/api/v1/write`  
-**Note:** `K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM` must be `"false"` (native histograms disabled in Prometheus v2.52.0)
+### WSL2 Docker port binding after nginx→apache switch
 
-### Current Status (2026-05-13)
+After stopping nginx and starting apache, the Apache container may start without port binding
+(`docker port` returns empty). Force-recreate fixes it:
 
-**✅ Done:**
-- Level 1 k6 test run and results recorded
-- Level 1 screenshots (6 dashboards) saved to `screenshots/l1-*.png`
+```bash
+docker compose --profile apache --profile obs up -d --force-recreate wordpress-apache
+```
 
-**🔲 TODO Next:**
-1. Switch to Level 2 (FastCGI cache + MariaDB tuning):
-   ```bash
-   NGINX_CONF=nginx-cache.conf MARIADB_CONFIG=10-tuned.cnf \
-     docker compose --profile nginx --profile obs up -d --force-recreate
-   ```
-2. Run level-compare.js again → expect P95 < 500ms, error rate < 5%
-3. Take 6 screenshots → `screenshots/l2-*.png`
-4. Key dashboard to show: `wp-nginx-cache` (04) — cache HIT rate ~80-95%
-5. Switch to Level 0 (Apache, crash scenario) and repeat
+## Modified Files (from original repo)
 
+| File | Change |
+|---|---|
+| `load/k6/level-compare.js` | BASE_URL → `host.docker.internal:8080`; PAGES fixed (no short-links); no optional chaining (`?.`) |
+| `docker-compose.yml` | k6: `extra_hosts` + `K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: "false"`; Prometheus: ports, flags |
+| `Makefile` | Added `load-compare` target |
+| `observability/grafana/dashboards/06-k6-live.json` | All PromQL updated from `_bucket` histogram_quantile to pre-calculated percentiles |
+| `scripts/screenshot.js` | NEW — Playwright screenshot automation |
+| `package.json` | NEW — `npm init -y` + `playwright` dependency |
