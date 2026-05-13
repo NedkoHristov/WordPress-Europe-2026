@@ -1,7 +1,7 @@
 # Context — WordPress Europe 2026 Repo
 
-> **Last updated:** 2026-05-10  
-> **Status:** ✅ Production Ready — All metrics collecting, dashboards populated, presentation ready for export
+> **Last updated:** 2026-05-13  
+> **Status:** ✅ Screenshots complete for L0, L1, L2 — Pending: PRESENTATION_OUTLINE.md, remaining code tasks
 > **Purpose:** Session continuity — paste this into any AI tool to resume work.
 
 ## Talk
@@ -106,13 +106,11 @@ diagrams/
 ## What Still Needs Doing
 
 - [ ] PRESENTATION_OUTLINE.md (full talk script with speaker notes)
-- [ ] SLIDES.md (slide-by-slide outline)
-- [ ] `.env.example` file
 - [ ] `results/screenshots/` folder with `.gitkeep`
-- [ ] Test full docker compose up on a fresh machine
-- [ ] Produce actual screenshots (run the demo once before the talk)
-- [ ] Add `blackbox_exporter` service to docker-compose.yml
-- [ ] Add `simply-static` plugin auto-activation to wp-setup.sh
+- [ ] Add `blackbox_exporter` service to docker-compose.yml (probe HTTP endpoints)
+- [ ] Add `simply-static` plugin auto-activation to `scripts/wp-setup.sh`
+- [ ] Fix `make level-0` to auto-stop nginx profile (prevent port conflict)
+- [ ] `.env.example` file
 
 ### Cloudflare CDN — Level 3 (in progress)
 

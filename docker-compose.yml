@@ -272,9 +272,11 @@ services:
   k6:
     image: grafana/k6:0.52.0
     # No depends_on prometheus — k6 works standalone; remote-write is best-effort
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       K6_PROMETHEUS_RW_SERVER_URL: http://prometheus:9090/api/v1/write
-      K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: "true"
+      K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: "false"
       K6_OUT: experimental-prometheus-rw
     volumes:
       - ./load/k6:/scripts:ro

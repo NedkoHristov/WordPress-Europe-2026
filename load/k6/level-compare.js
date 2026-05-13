@@ -20,13 +20,14 @@ const errorCount  = new Counter('level_errors');
 const successRate = new Rate('level_success_rate');
 const pageLoad    = new Trend('level_page_load_ms', true);
 
-// The BASE_URL must be accessible from within the k6 container
-const BASE_URL = __ENV.BASE_URL || 'http://nginx:80';
+// The BASE_URL must match the WordPress siteurl host to avoid canonical redirects.
+// Use host.docker.internal:8080 so the Host header matches siteurl (http://localhost:8080).
+const BASE_URL = __ENV.BASE_URL || 'http://host.docker.internal:8080';
 
 const PAGES = [
   '/',
-  '/?p=1',
-  '/?cat=1',
+  '/post-2498/',
+  '/category/uncategorized/',
   '/wp-json/wp/v2/posts?per_page=5',
   '/?s=hello',
   '/',

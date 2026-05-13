@@ -1,0 +1,22 @@
+{
+  "name": "wordpress-europe-2026",
+  "version": "1.0.0",
+  "description": "> **WordPress Europe 2026 — Kraków**   > Speaker: Nedko Hristov, Senior DevOps Engineer @ Nemetschek Bulgaria   > Talk: \"From server crash to enterprise scale — a live-fire DevOps exercise\"",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github-personal:NedkoHristov/WordPress-Europe-2026.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "playwright": "^1.60.0"
+  }
+}

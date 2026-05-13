@@ -29,7 +29,7 @@
       "title": "p95 Latency",
       "gridPos": { "x": 6, "y": 0, "w": 3, "h": 4 },
       "fieldConfig": { "defaults": { "unit": "ms", "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 500, "color": "yellow" }, { "value": 2000, "color": "red" }] } } },
-      "targets": [{ "datasource": "Prometheus", "expr": "histogram_quantile(0.95, sum(rate(k6_http_req_duration_bucket[1m])) by (le)) * 1000", "legendFormat": "p95 ms" }]
+      "targets": [{ "datasource": "Prometheus", "expr": "k6_http_req_duration_p99 * 1000", "legendFormat": "p95 ms" }]
     },
     {
       "id": 4,
@@ -96,10 +96,10 @@
       "gridPos": { "x": 12, "y": 4, "w": 12, "h": 9 },
       "fieldConfig": { "defaults": { "unit": "ms" } },
       "targets": [
-        { "datasource": "Prometheus", "expr": "histogram_quantile(0.50, sum(rate(k6_http_req_duration_bucket[1m])) by (le)) * 1000", "legendFormat": "p50" },
-        { "datasource": "Prometheus", "expr": "histogram_quantile(0.90, sum(rate(k6_http_req_duration_bucket[1m])) by (le)) * 1000", "legendFormat": "p90" },
-        { "datasource": "Prometheus", "expr": "histogram_quantile(0.95, sum(rate(k6_http_req_duration_bucket[1m])) by (le)) * 1000", "legendFormat": "p95" },
-        { "datasource": "Prometheus", "expr": "histogram_quantile(0.99, sum(rate(k6_http_req_duration_bucket[1m])) by (le)) * 1000", "legendFormat": "p99" }
+        { "datasource": "Prometheus", "expr": "k6_http_req_duration_seconds * 1000", "legendFormat": "p50" },
+        { "datasource": "Prometheus", "expr": "k6_http_req_duration_p99 * 1000", "legendFormat": "p90" },
+        { "datasource": "Prometheus", "expr": "k6_http_req_duration_p99 * 1000", "legendFormat": "p95" },
+        { "datasource": "Prometheus", "expr": "k6_http_req_duration_p99 * 1000", "legendFormat": "p99" }
       ]
     },
     {
@@ -110,9 +110,9 @@
       "gridPos": { "x": 0, "y": 13, "w": 12, "h": 7 },
       "fieldConfig": { "defaults": { "unit": "ms" } },
       "targets": [
-        { "datasource": "Prometheus", "expr": "histogram_quantile(0.95, sum(rate(k6_http_req_connecting_bucket[1m])) by (le)) * 1000", "legendFormat": "Connecting p95" },
-        { "datasource": "Prometheus", "expr": "histogram_quantile(0.95, sum(rate(k6_http_req_waiting_bucket[1m])) by (le)) * 1000", "legendFormat": "Waiting p95 (TTFB)" },
-        { "datasource": "Prometheus", "expr": "histogram_quantile(0.95, sum(rate(k6_http_req_receiving_bucket[1m])) by (le)) * 1000", "legendFormat": "Receiving p95" }
+        { "datasource": "Prometheus", "expr": "k6_http_req_connecting_p99 * 1000", "legendFormat": "Connecting p95" },
+        { "datasource": "Prometheus", "expr": "k6_http_req_waiting_p99 * 1000", "legendFormat": "Waiting p95 (TTFB)" },
+        { "datasource": "Prometheus", "expr": "k6_http_req_receiving_p99 * 1000", "legendFormat": "Receiving p95" }
       ]
     },
     {

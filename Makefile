@@ -130,6 +130,13 @@ load-woo:
 		-e BASE_URL=http://host.docker.internal:$(WP_PORT_VALUE) \
 		k6 run /scripts/browse-product-cart.js | cat
 
+.PHONY: load-compare
+load-compare:
+	@echo "$(YELLOW)▶ Level compare — 50 VU ramp (4 min)$(RESET)"
+	$(COMPOSE) --profile load run --rm \
+		-e BASE_URL=http://host.docker.internal:$(WP_PORT_VALUE) \
+		k6 run /scripts/level-compare.js | cat
+
 # ─── SETUP & CONTENT ─────────────────────────────────────────────────────────
 .PHONY: setup
 setup:
