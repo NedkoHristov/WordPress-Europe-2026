@@ -133,7 +133,7 @@ WordPress Europe 2026 · Kraków 🇵🇱
 <br>
 
 `github.com/NedkoHristov/WordPress-Europe-2026`
-> `docker compose up` — reproduce every number in this talk
+> `docker compose up` — every number in this talk is reproducible on your laptop
 
 ---
 
@@ -147,7 +147,7 @@ WordPress Europe 2026 · Kraków 🇵🇱
 
 💻 2 vCPU · 2 GB RAM · 20 GB SSD
 💰 ~$12/month (Hetzner CX22)
-🐳 Docker Desktop (same constraints)
+🐳 Docker Compose (same constraints, same demo)
 
 </div>
 
@@ -170,9 +170,9 @@ WordPress Europe 2026 · Kraków 🇵🇱
 <div class="card">
 
 ⚡ k6 — open source, Grafana Labs
-📈 Black Friday ramp: 10 → 500 VUs
-⏱️ 14-minute scenario
-📊 Metrics → Prometheus → Grafana (live)
+📈 Ramp: 10 → 50 Virtual Users
+⏱️ 90-second burst scenario
+📊 Metrics → Prometheus remote-write → Grafana (live)
 
 </div>
 
@@ -181,8 +181,8 @@ WordPress Europe 2026 · Kraków 🇵🇱
 **The observability**
 <div class="card">
 
-6 Grafana dashboards auto-provisioned:
-Overview · PHP-FPM · MariaDB
+7 Grafana dashboards auto-provisioned:
+Demo Story · Overview · PHP-FPM · MariaDB
 Nginx Cache · Redis · k6 Live
 
 </div>
@@ -194,33 +194,33 @@ Nginx Cache · Redis · k6 Live
 
 ## The journey
 
-| Level | Stack | Key unlock |
-|---|---|---|
-| <span class="pill pill-red">0</span> Apache + mod_php | Crash baseline | — |
-| <span class="pill pill-blue">1</span> Nginx + FPM + OPcache + Redis | Stops the crash | Zero-cost reconfig |
-| <span class="pill pill-blue">2</span> Level 1 + FastCGI cache + MariaDB | 95% PHP bypass | Zero-cost reconfig |
-| <span class="pill pill-gold">3</span> Level 2 + Cloudflare CDN | Edge absorbs load | Free tier |
-| <span class="pill pill-green">4</span> Level 2 + Static export | WP as CMS only | Zero-cost reconfig |
+| Level | Stack | Key unlock | Cost |
+|---|---|---|---|
+| <span class="pill pill-red">0</span> | Apache + mod_php — crash baseline | — | baseline |
+| <span class="pill pill-blue">1</span> | Nginx + FPM + OPcache + Redis | Stops the crash | **$0** |
+| <span class="pill pill-blue">2</span> | Level 1 + FastCGI cache + MariaDB tuning | 70% PHP bypass | **$0** |
+| <span class="pill pill-gold">3</span> | Level 2 + Cloudflare CDN | Edge absorbs peak load | ~$0–20/mo |
+| <span class="pill pill-green">4</span> | Level 2 + Static export | WP as a CMS, not a runtime | **$0** |
 
 <br>
 
 > **Same hardware. Same site. Same load.**
-> The difference is entirely architectural.
+> Every improvement is configuration and architecture — not more servers.
 
 ---
 
-## Observability architecture
+## Observability stack
 
 ```
-k6 ──remote-write──▶ Prometheus ◀── node-exporter (CPU/RAM)
-                          │       ◀── cadvisor      (containers)
-                          │       ◀── mysqld-exporter
-                          │       ◀── php-fpm-exporter
-                          │       ◀── nginx-exporter
-                          │       ◀── redis-exporter
+k6 ──remote-write──▶ Prometheus ◀── node-exporter  (CPU, RAM, disk)
+                          │       ◀── cadvisor       (container metrics)
+                          │       ◀── mysqld-exporter (threads, buffer pool)
+                          │       ◀── php-fpm-exporter (workers, queue)
+                          │       ◀── nginx-exporter  (connections, requests/s)
+                          │       ◀── redis-exporter  (hit rate, memory)
                           ▼
-                       Grafana
-                    6 dashboards
+                       Grafana  ←── Loki (container logs)
+                    7 dashboards
                     (live during demo)
 ```
 
@@ -243,119 +243,99 @@ k6 ──remote-write──▶ Prometheus ◀── node-exporter (CPU/RAM)
 
 ## Level 0 — How Apache prefork works
 
-![bg right:42%](diagrams/level-0-apache-baseline.png)
-
-**Each connection = one process**
+**Each connection = one OS process**
 
 ```
 Browser connects
-  → Apache forks a worker
-    → worker loads PHP into memory
-      → PHP runs WordPress
-        → MySQL query
-          → response sent
-            → worker stays alive (idle)
-              waiting for next request
+  → Apache forks a worker process
+    → worker loads PHP + WordPress into RAM
+      → PHP runs, queries MySQL
+        → response sent
+          → worker stays alive, waiting
+            (idle, ~32 MB RAM held)
 ```
 
-**The math:**
-- Each worker: ~32 MB RAM
-- 2 GB VPS − OS overhead = ~1.5 GB for PHP
-- **Maximum workers: ~47**
+**The problem:**
+- 60 idle workers = 1.9 GB RAM consumed
+- Browser #61 gets: queue
+- Browser #200 gets: **503**
 
-> Worker 48: queue.
-> Worker 100: **503 Service Unavailable**
+> The process model was designed for static files in 1996.
+> WordPress averages **300+ database queries per page.**
+
+---
+
+## The Apache math
+
+$$\text{Max safe workers} = \frac{\text{RAM} - \text{OS + DB + Redis overhead}}{\text{RAM per PHP-WordPress process}}$$
+
+$$= \frac{2048 \text{ MB} - 512 \text{ MB}}{32 \text{ MB/worker}} = \textbf{47 workers max}$$
+
+<br>
+
+| Workers busy | What happens |
+|---|---|
+| 1 – 40 | ✅ Fast responses |
+| 41 – 47 | ⚠️ Slow — swapping begins |
+| 48 | Queue forms — new requests wait |
+| 100+ | **503 Service Unavailable** |
+
+<br>
+
+> This is not a bug. It is arithmetic.
+> The "crash" happens at a completely predictable, calculable virtual user count.
 
 ---
 
 <!-- _class: screenshot -->
 
-## Black Friday ramp — the timeline
+## 📸 Level 0 — The Crash (Black Friday ramp: 0 → 500 Virtual Users)
 
-| Time | VUs | Event | Dashboard |
-|---|---|---|---|
-| 1 min | 10 | ✅ All green, p95 < 200ms | Overview |
-| 3 min | 50 | ⚠️ CPU climbing, Load > 2 | Overview |
-| 4 min | 80–100 | 🔴 FPM saturated, queue forming | PHP-FPM |
-| 4:30 | 100 | 🔴 MySQL threads spike | MariaDB |
-| **5 min** | **100–150** | **💀 CRASH — 503s, load > 10** | **Overview** |
-| 5:30 | 150+ | k6 error rate > 50% | k6 Live |
-
-<br>
-
-```bash
-make load-crash   # 0→500 VUs · Black Friday ramp
-```
+![w:1060](screenshots/l0-crash-00-demo.png)
 
 ---
 
-<!-- _class: crash screenshot -->
+## Level 0 — reading the crash
 
-## 📸 The crash — Grafana Overview
-
-![w:1000](screenshots/01-wp-overview.png)
-
-<div class="cols3" style="margin-top:12px">
-<div class="metric metric-red"><div class="num">100%</div><div class="lbl">CPU</div></div>
-<div class="metric metric-red"><div class="num">>10</div><div class="lbl">Load Average</div></div>
-<div class="metric metric-red"><div class="num">>50%</div><div class="lbl">Error Rate</div></div>
+<div class="cols3">
+<div class="metric metric-red"><div class="num">~140</div><div class="lbl">Peak requests/s — then collapse</div></div>
+<div class="metric metric-red"><div class="num">2.9 s</div><div class="lbl">p95 Latency at crash</div></div>
+<div class="metric metric-red"><div class="num">6 s</div><div class="lbl">p99 — flat ceiling</div></div>
 </div>
 
----
-
-<!-- _class: crash screenshot -->
-
-## 📸 PHP-FPM saturated
-
-![bg right:55%](screenshots/04-php-fpm-deep-dive.png)
-
-**What you see:**
-- Active Workers = **20** (max)
-- Queue Depth **> 0** and growing
-- New connections start timing out
-
 <br>
 
-**pm.max_children = 20**
-The hard limit. Once all workers are
-busy — the 21st request waits.
-Once the queue fills — it fails.
+<div class="cols">
+<div>
 
----
+**Virtual Users & requests/s chart — top left:**
+- Blue Virtual Users line climbs to **500**
+- Green requests/s line peaks ~140 then **collapses** — the server buckles
+- At the screenshot moment: only 24.5 requests/s from 500 Virtual Users = **83% of requests failing or queued**
 
-<!-- _class: crash screenshot -->
+**Latency chart — bottom left:**
+- p99 (red): **flat line at 6 seconds** from the first minute
+- p95 (orange): ~3 seconds — 15× worse than Level 1
+- p50 (green): ~1 second — even the median is unusable
 
-## 📸 MariaDB overwhelmed
+</div>
+<div>
 
-![bg right:55%](screenshots/03-mariadb-deep-dive.png)
+**FPM Workers — top right:**
+- Queue Depth (red): spiked to **~250** ← catastrophic backlog
+- Active Workers: maxed out, then started dropping as workers timed out
 
-**Threads Running spike**
+**MariaDB — bottom right:**
+- Threads Running spiked to **20** and stayed there
+- Connection queue fully saturated
+- Every PHP request holding a DB connection waiting on I/O
 
-The database bottleneck:
-- No object cache → every `get_option()` hits MySQL
-- 300+ queries per page request
-- Buffer pool too small (128 MB) → disk I/O
-- Threads pile up → deadlocks → timeouts
+> **The crash is visible in one chart:**
+> Green requests/s goes up, then down, while Blue Virtual Users keep climbing.
+> The server is no longer responding to more load — only less.
 
-> **Threads Running > 10 = the crash indicator**
-
----
-
-## The Apache prefork math
-
-$$\text{Max safe workers} = \frac{\text{RAM} - \text{OS overhead}}{\text{RAM per PHP process}}$$
-
-$$= \frac{2048 \text{ MB} - 512 \text{ MB}}{32 \text{ MB}} = \textbf{47 workers}$$
-
-<br>
-
-![w:700 center](diagrams/fpm-pool-math.png)
-
-<br>
-
-> Worker 48 goes into the queue.
-> Worker 100 gets a 503.
-> This is not a bug — it's arithmetic.
+</div>
+</div>
 
 ---
 
@@ -369,23 +349,26 @@ $$= \frac{2048 \text{ MB} - 512 \text{ MB}}{32 \text{ MB}} = \textbf{47 workers}
 
 ---
 
-## Level 1 — How it's different
-
-![bg right:45%](diagrams/level-1-nginx-fpm-redis.png)
-
-**Three fundamental changes:**
+## Level 1 — Three changes, zero cost
 
 **1. Nginx (event-driven)**
-One thread handles 10,000+ connections.
+One thread, 10,000+ concurrent connections.
 Zero RAM per idle connection.
 
-**2. PHP-FPM (decoupled)**
-Workers only spawn for PHP work.
-Not one-per-connection — one-per-request.
+**2. PHP-FPM (decoupled pool)**
+Workers handle PHP execution only.
+Nginx queues connections externally.
+`pm.max_children = 20` — hard limit, **never OOM**.
 
-**3. OPcache + Redis**
-- OPcache: compiled PHP bytecode in shared memory
-- Redis: DB query results in RAM
+**3. OPcache + Redis object cache**
+- OPcache: compiled PHP bytecode in shared memory — zero disk reads
+- Redis: DB query results in RAM — 82% of DB calls served from memory
+
+<br>
+
+```bash
+make level-1   # 10 seconds to switch
+```
 
 ---
 
@@ -397,32 +380,31 @@ Not one-per-connection — one-per-request.
 ### ❌ Without OPcache (Level 0)
 
 ```
-Request arrives
-→ PHP reads .php file from disk
-→ Lexer tokenizes source
-→ Parser builds AST
-→ Compiler generates opcodes
-→ Execute opcodes
-→ Response
+Every single request:
+  disk read  → parse → lex
+  → AST → compile → opcodes
+  → execute → response
 
-Repeat for EVERY request.
+Repeat for 300+ PHP files.
+wp-settings.php alone
+includes 100+ files.
 ```
 
 </div>
 <div class="card">
 
-### ✅ With OPcache (Level 1)
+### ✅ With OPcache (Level 1+)
 
 ```
-First request:
-→ compile → store in shared memory
+First request only:
+  compile → store in shared RAM
 
 Every request after:
-→ read opcodes from RAM
-→ Execute
-→ Response
+  read opcodes from RAM
+  → execute → response
 
 Zero disk. Zero compilation.
+~98% hit rate after 30s of traffic.
 ```
 
 </div>
@@ -430,112 +412,99 @@ Zero disk. Zero compilation.
 
 <br>
 
-> **98%+ cache hit rate within 30 seconds of first load**
-> `opcache.validate_timestamps=0` in production — never re-check disk
-
----
-
-<!-- _class: screenshot -->
-
-## 📸 OPcache hit rate in Grafana
-
-![bg right:58%](screenshots/01-wp-overview.png)
-
-**What to look for:**
-
-- Hit Rate: **> 98%**
-- Cached Scripts: stabilises at ~200
-- Memory Used: flat line
-
-<br>
-
-This chart pays for the entire
-talk. One config line:
 ```ini
 opcache.enable = 1
-opcache.validate_timestamps = 0
+opcache.validate_timestamps = 0   ; never re-check disk (production)
+opcache.memory_consumption = 256  ; MB
 ```
-
----
-
-## Redis object cache
-
-**Without Redis:** every `get_option()` → MySQL → disk → PHP array
-WordPress calls `get_option()` **300+ times per request**.
-
-**With Redis:**
-```
-wp_get_option('siteurl') → Redis GET → 0.1ms ← from RAM
-wp_query($args)          → Redis GET → 0.1ms ← cached result
-```
-
-```bash
-wp plugin install redis-cache --activate
-wp redis enable
-```
-
-**Result: ~70% of DB queries served from memory**
-
-> Hit ratio climbs as cache warms up.
-> After 1 minute of traffic: most reads never reach MySQL.
 
 ---
 
 <!-- _class: screenshot -->
 
-## 📸 Redis hit ratio climbing
+## 📸 Level 1 — Demo Dashboard (50 Virtual Users)
 
-![bg right:58%](screenshots/06-redis-cache.png)
+![w:1060](screenshots/l1-00-demo.png)
 
-**Grafana Redis dashboard**
+---
 
-- Hit Ratio: climbing to **70%+**
-- Memory Used: grows then stabilises
-- DB Queries Saved panel: the savings accumulate
+## Level 1 — reading the dashboard
+
+<div class="cols3">
+<div class="metric metric-blue"><div class="num">50</div><div class="lbl">Peak Virtual Users</div></div>
+<div class="metric metric-green"><div class="num">65</div><div class="lbl">Peak requests/s</div></div>
+<div class="metric metric-gold"><div class="num">133 ms</div><div class="lbl">p95 Latency</div></div>
+</div>
 
 <br>
 
-Every hit in Redis = one query
-MySQL didn't have to run.
+<div class="cols">
+<div>
+
+**FPM Workers chart — top right:**
+- Active Workers peaked at **14 / 20**
+- Queue Depth: **0 throughout** ← the stack did not crash
+- Idle workers always available → Nginx never queued
+
+**MariaDB Threads — bottom right:**
+- Spiked to **12.5 threads running**
+- Every request still hitting MySQL
+
+</div>
+<div>
+
+**Requests vs FPM — bottom left:**
+- Both lines nearly overlap
+- Tiny gap = almost no caching yet
+- **Every Nginx request forwarded to PHP**
+
+**Redis Hit Rate — bottom right:**
+- Climbed from 0% → **82.3%** as cache warmed
+- 46,000 keys, 14.5 MB used
+- 6,000+ Redis ops/s vs ~300 MySQL queries/s
+
+</div>
+</div>
 
 ---
 
 <!-- _class: screenshot -->
 
-## 📸 Same load — Level 1 FPM workers
+## 📸 Level 1 — PHP-FPM Workers & Request Rate
 
-![bg right:55%](screenshots/04-php-fpm-deep-dive.png)
-
-**What changed:**
-
-- Active Workers: stays **< 15** at 200 VU
-- Queue Depth: **0** ← this is why it doesn't crash
-- Nginx queues connections, workers do real work
-
-<br>
-
-Level 0 crashed at **80 VU**.
-Level 1 handles **300+ VU** comfortably.
-Same hardware. Different architecture.
+![w:1060](screenshots/l1-02-php-fpm.png)
 
 ---
 
-## Level 0 vs Level 1 — by the numbers
+<!-- _class: screenshot -->
 
-| Metric | Level 0 | Level 1 | Change |
-|---|---|---|---|
-| Max stable VUs | ~50 | 300+ | **6×** |
-| p95 latency @ 100 VU | timeout | ~180ms | ✅ |
-| CPU @ 200 VU | 100% (dead) | ~60% | ✅ |
-| OPcache hit rate | 0% | 98%+ | ✅ |
-| Redis hit rate | 0% | ~70% | ✅ |
-| FPM queue depth | N/A | **0** | ✅ |
-| DB queries/req | 300+ | ~90 | **3× fewer** |
+## 📸 Level 1 — Redis: 82% Hit Rate, 6K ops/s
 
-<br>
+![w:1060](screenshots/l1-05-redis.png)
 
-> **Cost of this upgrade: $0**
-> `make level-1` — 10 seconds.
+---
+
+## Level 1 — what Redis is actually doing
+
+**46,000 cached keys · 14.5 MB · 6,000 ops/s at peak**
+
+```
+WordPress makes 300+ DB calls per page request.
+Redis intercepts most of them:
+
+wp_get_option('siteurl')        → Redis HIT → 0.1 ms
+wp_get_option('blogname')       → Redis HIT → 0.1 ms
+WP_Query (recent posts)         → Redis HIT → 0.1 ms
+get_post_meta(post_id, '_price')→ Redis HIT → 0.1 ms
+WC product lookup               → Redis MISS → MySQL → 4 ms → cached
+
+After warmup: ~82% of DB calls answered from memory.
+MySQL sees ~54 queries/request instead of 300+.
+```
+
+> Redis did not prevent the crash at Level 0 because we never got there.
+> It **would** delay the crash significantly — but doesn't eliminate it.
+> That requires removing PHP from the hot path entirely.
 
 ---
 
@@ -551,158 +520,216 @@ Same hardware. Different architecture.
 
 ## The key insight
 
-> **Most WordPress page requests are identical for every anonymous visitor.**
-> Home page. Category archive. Blog post.
-> Same HTML. Over and over. Rendered by PHP every single time.
+> **Most WordPress page requests return identical HTML for every anonymous visitor.**
+> Home page. Category. Blog post. Shop.
+> PHP runs. MySQL queries. OPcache helps. Redis helps.
+> **The output is still the same HTML every time.**
 
-**FastCGI page cache:**
+**FastCGI page cache — the logical conclusion:**
 ```
-First anonymous visitor  → PHP runs → page cached to disk
-Every visitor after that → Nginx reads cache → 8ms TTFB
-                          PHP never runs
-                          MySQL never runs
+First anonymous visitor  → PHP runs → nginx stores response on disk
+Every visitor after      → nginx reads cached file → 8ms TTFB
+                           PHP never runs
+                           MySQL never runs
+                           Redis never asked
 ```
 
 <div class="cols">
 <div class="card">
 
-**Cached (anonymous):** ✅
-- Homepage
-- Category pages
-- Blog posts
-- Shop pages
+**Cached (anonymous visitors)** ✅
+Homepage · Category pages · Posts · Shop
 
 </div>
 <div class="card">
 
-**Bypassed (dynamic):** 🔄
-- Logged-in users
-- Cart / Checkout
-- POST requests
-- Admin panel
+**Bypassed (dynamic)** 🔄
+Logged-in · Cart · Checkout · Admin
 
 </div>
 </div>
 
 ---
 
-## Level 2 architecture
-
-![bg right:48%](diagrams/level-2-fastcgi-cache.png)
+## Level 2 — nginx config
 
 ```nginx
 fastcgi_cache_path /var/cache/nginx
+  levels=1:2
   keys_zone=WORDPRESS:100m
-  inactive=60m;
+  inactive=60m
+  max_size=1g;
 
-# Bypass for dynamic content
-if ($http_cookie ~* 
-  "wordpress_logged_in|
-   woocommerce_cart|
-   woocommerce_session") {
-  set $skip_cache 1;
+# Bypass rule — logged-in users and WooCommerce sessions
+set $skip_cache 0;
+if ($http_cookie ~* "wordpress_logged_in|woocommerce_cart|woocommerce_session") {
+    set $skip_cache 1;
+}
+
+location ~ \.php$ {
+    fastcgi_cache WORDPRESS;
+    fastcgi_cache_key "$scheme$request_method$host$request_uri";
+    fastcgi_cache_valid 200 60m;
+    fastcgi_cache_bypass $skip_cache;
+    fastcgi_no_cache $skip_cache;
+    add_header X-Cache-Status $upstream_cache_status;  # HIT / MISS / BYPASS
 }
 ```
 
-**Result:**
-`X-Cache-Status: HIT`
-→ PHP never runs for this request
+```bash
+make level-2   # 10 seconds to switch. Same hardware.
+```
 
 ---
 
 <!-- _class: screenshot -->
 
-## 📸 Cache warming in real time
+## 📸 Level 2 — Demo Dashboard (50 Virtual Users)
 
-![bg right:58%](results/screenshots/act3-cache-hot.png)
+![w:1060](screenshots/l2-00-demo.png)
 
-**Nginx Cache dashboard — donut chart**
+---
 
-| Time | HIT % |
-|---|---|
-| 0:00 | 0% — all MISS |
-| 0:30 | ~40% |
-| 1:00 | ~70% |
-| **2:00** | **90%+** ← screenshot this |
+## Level 2 — reading the dashboard
+
+<div class="cols3">
+<div class="metric metric-green"><div class="num">70</div><div class="lbl">Peak requests/s (+8%)</div></div>
+<div class="metric metric-green"><div class="num">79 ms</div><div class="lbl">p95 Latency (was 133ms)</div></div>
+<div class="metric metric-green"><div class="num">18%</div><div class="lbl">CPU (was 25%)</div></div>
+</div>
 
 <br>
-
-Watch the green slice grow.
-That green = PHP not running.
-
----
-
-<!-- _class: screenshot -->
-
-## 📸 PHP-FPM offload
-
-![w:900 center](results/screenshots/act3-fpm-offload.png)
-
-<br>
-
-> **Top line: total RPS (all traffic)**
-> **Bottom line: PHP-FPM RPS (cache misses only)**
->
-> The gap between them = **cache absorbing the load**
-
----
-
-## The full cache hierarchy
-
-![w:900 center](diagrams/cache-hierarchy.png)
-
----
-
-## MariaDB tuning
 
 <div class="cols">
 <div>
 
-**Level 0 (baseline)**
-```ini
-# 00-baseline.cnf
-innodb_buffer_pool_size = 128M
-max_connections = 151
-```
-
-Problems:
-- 128M pool → constant disk I/O
-- Every query reads from disk
-- Slow queries go undetected
+**FPM Workers — top right:**
+- Active Workers peaked at **11 / 20** (was 14)
+- Queue Depth: **0** — same as L1 but with less work
+- FPM Request Rate: only **~20 requests/s** (vs 70 requests/s from Nginx)
+- **50 requests/s served from cache — PHP never ran**
 
 </div>
 <div>
 
-**Level 2 (tuned)**
+**MariaDB Threads — bottom right:**
+- Max **3 threads running** (was 12.5!)
+- **76% fewer DB queries** — cache bypass requests only
+- Buffer pool pressure gone
+
+**Requests vs FPM gap:**
+- Nginx: **~70 requests/s**
+- PHP-FPM: **~20 requests/s**
+- Gap = **~50 requests/s served from disk cache**
+
+</div>
+</div>
+
+---
+
+<!-- _class: screenshot -->
+
+## 📸 Level 2 — Nginx Cache: 9.94K requests, FPM Offload
+
+![w:1060](screenshots/l2-04-nginx-cache.png)
+
+---
+
+## Level 2 — the FPM offload panel explained
+
+**Bottom-right panel: PHP-FPM Offload — Requests NOT hitting PHP**
+
+```
+Total requests/s (Nginx)    ████████████████████████  ~70  ← everything
+Requests/s hitting PHP-FPM  ████████                  ~20  ← only cache misses
+
+Gap                  ████████████████          ~50  ← served from cache
+                                                            PHP never ran
+                                                            MySQL never queried
+```
+
+<br>
+
+**In 5 minutes of the test:** `9,940 total requests`
+- ~7,000 served from nginx cache (disk read, <10ms)
+- ~2,940 required PHP execution (cold cache, logged in, dynamic pages)
+
+<br>
+
+> **This is the money slide.**
+> The gap between the two lines is PHP execution that never happened.
+> Scale that to a Black Friday spike — 10× traffic hits nginx, not your server.
+
+---
+
+<!-- _class: screenshot -->
+
+## 📸 Level 2 — PHP-FPM: Steady at 10-11 Workers
+
+![w:1060](screenshots/l2-02-php-fpm.png)
+
+---
+
+## MariaDB tuning — Level 2
+
+<div class="cols">
+<div>
+
+**Level 0 baseline config:**
+```ini
+# 00-baseline.cnf
+innodb_buffer_pool_size = 128M
+# (default — fits almost nothing)
+max_connections = 151
+```
+With 128M buffer pool:
+- WordPress DB ≈ 500MB
+- **Every query reads from disk**
+- Buffer pool full → constant disk I/O
+- Slow queries undetected
+
+</div>
+<div>
+
+**Level 2 tuned config:**
 ```ini
 # 10-tuned.cnf
 innodb_buffer_pool_size = 512M
 innodb_flush_log_at_trx_commit = 2
+innodb_log_file_size = 128M
 slow_query_log = 1
 long_query_time = 0.5
 ```
-
-Wins:
-- DB fits in RAM → < 1ms reads
+After tuning:
+- DB fits in RAM → sub-millisecond reads
 - Commits batched (1×/sec vs every write)
-- Slow queries identified + fixed
+- Slow queries logged → visible in Loki
+- **MariaDB Threads Running: 12.5 → 3**
 
 </div>
 </div>
 
 ---
 
-<!-- _class: win screenshot -->
+## Level 1 vs Level 2 — the real numbers
 
-## 📸 Level 2 — The server is bored
+| Metric | Level 1 | Level 2 | Change |
+|---|---|---|---|
+| Peak requests/s @ 50 Virtual Users | 65 | **70** | +8% |
+| p95 Latency | 133 ms | **79 ms** | **−41%** |
+| CPU usage | 25.4% | **18.1%** | **−29%** |
+| FPM workers (peak) | 14 / 20 | **11 / 20** | −21% |
+| FPM queue depth | 0 | **0** | — |
+| MariaDB threads (peak) | 12.5 | **3** | **−76%** |
+| Cache offload | 0% | **~70%** | ✅ 50 requests/s saved |
+| Requests in 5 min | ~8K | **9.94K** | +24% |
+| Redis hit ratio | 82.3% | ~80%+ | similar |
 
-![w:940 center](results/screenshots/act1-crash-overview.png)
+<br>
 
-<div class="cols3" style="margin-top:12px">
-<div class="metric metric-green"><div class="num">8ms</div><div class="lbl">TTFB (was 800ms)</div></div>
-<div class="metric metric-green"><div class="num">15%</div><div class="lbl">CPU @ 500 VU</div></div>
-<div class="metric metric-green"><div class="num">0%</div><div class="lbl">Error Rate</div></div>
-</div>
+> L2 does **more** work with **less** resource because 70% of requests
+> never leave nginx. The remaining 30% are served faster too —
+> because MariaDB has headroom now.
 
 ---
 
@@ -718,58 +745,68 @@ Wins:
 
 ## The static export concept
 
-![bg right:45%](diagrams/level-4-hybrid-static.png)
-
-**Build time** (once, or on publish):
+**Build time** (once, on each publish):
 ```bash
 make static-build
-# wget crawls every page
-# saves HTML to static/export/
+# wget crawls all published pages
+# saves complete HTML to static/export/
+# runs in ~30s for 2,500 posts
 ```
 
-**Runtime** (every request):
+**Runtime** (every anonymous request):
 ```
 Browser → Nginx
-  ├── /              → static HTML (0ms PHP)
-  ├── /shop/         → static HTML (0ms PHP)  
-  └── /wp-json/cart  → proxy to WordPress
-     /checkout       → proxy to WordPress
+  ├── /home         → static HTML file (0ms PHP)
+  ├── /post-2498/   → static HTML file (0ms PHP)
+  └── /checkout     → proxy → WordPress (live)
+     /wp-admin      → proxy → WordPress (live)
+     /wp-json/cart  → proxy → WordPress (live)
 ```
 
-**WordPress only runs for:**
-- Cart, Checkout, Account (dynamic islands)
-- Admin editing (publishing new content)
-
----
-
-<!-- _class: win screenshot -->
-
-## 📸 500 VUs — origin CPU at 0%
-
-![w:940 center](results/screenshots/act4-k6-static.png)
-
-<div class="cols3" style="margin-top:12px">
-<div class="metric metric-green"><div class="num">4ms</div><div class="lbl">p95 latency</div></div>
-<div class="metric metric-green"><div class="num">500</div><div class="lbl">VUs (no crash)</div></div>
-<div class="metric metric-green"><div class="num">0%</div><div class="lbl">WP CPU used</div></div>
-</div>
+**WordPress only activates for cart / checkout / admin.**
+The rest is a static file server.
 
 ---
 
 ## The full picture
 
-| Level | Stack | Stable VUs | p95 | Cost |
+| Level | Stack | p95 Latency | CPU @ 50 Virtual Users | DB Threads |
 |---|---|---|---|---|
-| **0** | Apache + mod_php | ~50 | 💥 crash | baseline |
-| **1** | Nginx + FPM + OPcache + Redis | 300+ | ~180ms | **$0** |
-| **2** | Level 1 + FastCGI + MariaDB | 500+ | ~45ms | **$0** |
-| **3** | Level 2 + Cloudflare CDN | ∞ (edge) | ~20ms | ~$0–20/mo |
-| **4** | Static export | 500+ | ~4ms | **$0** |
+| **0** | Apache + mod_php | 💥 crash ~50 Virtual Users | 100% | 20–30 |
+| **1** | Nginx + FPM + OPcache + Redis | **133 ms** | 25% | 12.5 |
+| **2** | Level 1 + FastCGI cache + MariaDB | **79 ms** | 18% | 3 |
+| **3** | Level 2 + Cloudflare CDN | ~20 ms (edge) | <5% | <1 |
+| **4** | Level 2 + Static export | ~4 ms | <5% | <1 |
 
 <br>
 
-> **Every improvement except Cloudflare costs $0 in infrastructure.**
+> **Every improvement except Cloudflare costs exactly $0.**
 > It was configuration, architecture, and understanding the bottleneck.
+
+---
+
+## The full cache hierarchy
+
+```
+Request from browser
+  │
+  ▼
+[Cloudflare CDN]  ← Level 3 (edge cache, global PoP)
+  │ miss
+  ▼
+[Nginx FastCGI Cache]  ← Level 2 (disk cache, 60-min TTL)
+  │ miss
+  ▼
+[PHP-FPM]  ← always running, pool of 20 workers
+  ├── [OPcache]  ← Level 1 (compiled bytecode in RAM)
+  └── [Redis Object Cache]  ← Level 1 (DB query results in RAM)
+       │ miss (first time only)
+       ▼
+    [MariaDB]  ← tuned at Level 2: 512MB buffer pool
+```
+
+> Each layer absorbed ~70–95% of what reached it.
+> MariaDB only sees the requests Redis couldn't answer.
 
 ---
 
@@ -778,12 +815,14 @@ Browser → Nginx
 <div class="cols">
 <div>
 
-**1. Measure first**
+**1. Measure before you fix**
 <div class="card">
 
-Set up Grafana + Prometheus
+Set up Prometheus + Grafana
 **before** you need it.
 You cannot fix what you cannot see.
+
+`make obs-up` — 30 seconds.
 
 </div>
 
@@ -795,37 +834,38 @@ You cannot fix what you cannot see.
 ```
 OPcache  → PHP bytecode  → always on
 Redis    → DB queries    → wp redis enable
-FastCGI  → Full pages    → nginx config
+FastCGI  → Full pages    → nginx.conf
 ```
 
-Most sites use 0 or 1.
-All three together = a different machine.
+Most sites use 0 of these 3.
+All three: completely different machine.
 
 </div>
 
 </div>
 <div>
 
-**3. pm.max_children is math**
+**3. pm.max_children is math, not guessing**
 <div class="card">
 
-$$\frac{\text{RAM for PHP}}{\text{MB per worker}}$$
+$$\frac{\text{RAM available for PHP}}{\text{MB per WordPress worker}}$$
 
 Over-provision → OOM killer.
-Under-provision → queue.
-**Do the calculation.**
+Under-provision → queue → 503.
+
+Measure with Grafana, then calculate.
 
 </div>
 
 <br>
 
-**4. DB is usually the bottleneck**
+**4. The DB is almost always the real bottleneck**
 <div class="card">
 
 - `innodb_buffer_pool_size` = 70% of RAM
-- Enable `slow_query_log`
-- Watch **Threads Running**
-- Run `wp db optimize` regularly
+- Enable `slow_query_log`, watch Loki
+- Watch **Threads Running** in Grafana
+- Level 2: threads went 12.5 → **3**
 
 </div>
 
@@ -834,40 +874,41 @@ Under-provision → queue.
 
 ---
 
-## The tools — all free
+## The tools — all free, all open source
 
 <div class="cols">
 <div>
 
 | Tool | Role |
 |---|---|
-| **k6** | Load generator |
-| **Prometheus** | Metrics storage |
-| **Grafana** | Dashboards (6 built-in) |
-| **Redis** | Object cache |
-| **PHP OPcache** | Bytecode cache |
+| **k6** | Load generator — scriptable, Prometheus remote-write |
+| **Prometheus** | Metrics collection + storage |
+| **Grafana** | 7 dashboards, auto-provisioned |
+| **Loki + Promtail** | Container log aggregation |
 
 </div>
 <div>
 
 | Tool | Role |
 |---|---|
-| **Nginx FastCGI** | Full-page cache |
-| **MariaDB 11** | Tuned DB |
-| **Simply Static** | Static export |
-| **Cloudflare** | CDN + Zero Trust |
-| **Docker Compose** | Reproducible demo |
+| **Nginx FastCGI** | Full-page cache (built-in) |
+| **PHP OPcache** | Bytecode cache (built-in) |
+| **Redis** | Object cache |
+| **MariaDB 11** | Tuned DB config |
+| **Docker Compose** | Reproducible demo — one file |
 
 </div>
 </div>
 
 <br>
-<div class="card" style="text-align:center;padding:16px">
+<div class="card" style="text-align:center;padding:20px">
 
 🐙 **github.com/NedkoHristov/WordPress-Europe-2026**
 
-`docker compose up` — everything starts. Every demo is reproducible.
-One `make reset` to wipe state. One `make level-0` to start over.
+```bash
+git clone … && make level-1 && make obs-up && make setup && make snapshot
+```
+Every level. Every screenshot. Every number. Reproducible.
 
 </div>
 
@@ -884,8 +925,7 @@ Senior DevOps Engineer @ Nemetschek Bulgaria
 
 🐙 `github.com/NedkoHristov/WordPress-Europe-2026`
 
-<br>
-<br>
+<br><br>
 
 ### Questions?
 

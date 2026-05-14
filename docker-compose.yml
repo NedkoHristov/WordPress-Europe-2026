@@ -277,6 +277,8 @@ services:
     environment:
       K6_PROMETHEUS_RW_SERVER_URL: http://prometheus:9090/api/v1/write
       K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: "false"
+      # Export p50/p90/p95/p99 quantiles — k6 v0.52+ requires p(N) format
+      K6_PROMETHEUS_RW_TREND_STATS: "p(50),p(90),p(95),p(99)"
       K6_OUT: experimental-prometheus-rw
     volumes:
       - ./load/k6:/scripts:ro

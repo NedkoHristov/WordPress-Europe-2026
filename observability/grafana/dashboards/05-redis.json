@@ -1,6 +1,6 @@
 {
   "uid": "wp-redis",
-  "title": "05 — Redis Object Cache",
+  "title": "not-for-demo-05 — Redis Object Cache",
   "description": "Redis memory, hit/miss ratio, evictions, keyspace. Screenshot at Level 1 to show object cache absorbing WP DB load.",
   "tags": ["redis"],
   "timezone": "browser",

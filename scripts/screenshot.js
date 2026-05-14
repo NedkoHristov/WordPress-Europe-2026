@@ -9,6 +9,7 @@ const OUT_DIR = path.join(__dirname, '..', 'screenshots');
 const GRAFANA = 'http://localhost:3000';
 
 const DASHBOARDS = [
+  { uid: 'wp-demo',        label: '00-demo'       },  // primary presentation dashboard
   { uid: 'wp-k6-live',     label: '06-k6-live'    },
   { uid: 'wp-overview',    label: '01-overview'   },
   { uid: 'wp-php-fpm',     label: '02-php-fpm'    },

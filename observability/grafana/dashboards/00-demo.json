@@ -1,0 +1,265 @@
+{
+  "uid": "wp-demo",
+  "title": "00 — DEMO: Stress Test Story",
+  "description": "Single pane for presentation screenshots. Every vital metric in one view: load shape, latency, worker saturation, cache offload. L0=crash baseline, L1=Nginx+FPM+Redis, L2=+FastCGI cache.",
+  "tags": ["demo", "presentation"],
+  "timezone": "browser",
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Virtual Users",
+      "description": "Peak concurrent users during the test window (max over time range).",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["max"] },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "value": 0, "color": "blue" }] }
+        }
+      },
+      "targets": [{ "datasource": "Prometheus", "expr": "k6_vus", "legendFormat": "Virtual Users" }]
+    },
+
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Requests Per Second",
+      "description": "HTTP requests per second as measured by k6 (client-side).",
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [
+            { "value": 0, "color": "green" },
+            { "value": 50, "color": "yellow" },
+            { "value": 150, "color": "red" }
+          ]}
+        }
+      },
+      "targets": [{ "datasource": "Prometheus", "expr": "sum(rate(k6_http_reqs_total[30s]))", "legendFormat": "Requests Per Second" }]
+    },
+
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "p95 Latency",
+      "description": "95th percentile response time. > 2000 ms = users notice; > 10 000 ms = users leave.",
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [
+            { "value": 0,    "color": "green" },
+            { "value": 500,  "color": "yellow" },
+            { "value": 2000, "color": "red" }
+          ]}
+        }
+      },
+      "targets": [{ "datasource": "Prometheus", "expr": "k6_http_req_duration_p95 * 1000", "legendFormat": "p95 Latency" }]
+    },
+
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Error Rate",
+      "description": "Fraction of k6 requests that got non-2xx responses or timed out.",
+      "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [
+            { "value": 0,    "color": "green" },
+            { "value": 0.01, "color": "yellow" },
+            { "value": 0.05, "color": "red" }
+          ]}
+        }
+      },
+      "targets": [{
+        "datasource": "Prometheus",
+        "expr": "sum(rate(k6_http_reqs_total{expected_response=\"false\"}[30s])) / sum(rate(k6_http_reqs_total[30s]))",
+        "legendFormat": "Error Rate"
+      }]
+    },
+
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "CPU %",
+      "description": "Host CPU utilisation. Spikes to 100% at Level 0 crash point.",
+      "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "max": 100,
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [
+            { "value": 0,  "color": "green" },
+            { "value": 70, "color": "yellow" },
+            { "value": 90, "color": "red" }
+          ]}
+        }
+      },
+      "targets": [{
+        "datasource": "Prometheus",
+        "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[30s])) * 100)",
+        "legendFormat": "CPU %"
+      }]
+    },
+
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "PHP-FPM Active Workers",
+      "description": "When this hits pm.max_children (20) and queue > 0, the stack is saturated.",
+      "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [
+            { "value": 0,  "color": "green" },
+            { "value": 15, "color": "yellow" },
+            { "value": 19, "color": "red" }
+          ]}
+        }
+      },
+      "targets": [{ "datasource": "Prometheus", "expr": "phpfpm_active_processes", "legendFormat": "Active Workers" }]
+    },
+
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Virtual Users & Requests Per Second — Load Ramp",
+      "description": "The key visual: where Virtual Users keep climbing but Requests Per Second plateaus — that is the breaking point. On Level 2 both lines track together.",
+      "gridPos": { "x": 0, "y": 4, "w": 14, "h": 9 },
+      "fieldConfig": {
+        "defaults": { "unit": "reqps" },
+        "overrides": [{
+          "matcher": { "id": "byName", "options": "Virtual Users" },
+          "properties": [
+            { "id": "custom.axisPlacement", "value": "right" },
+            { "id": "unit", "value": "short" },
+            { "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" }},
+            { "id": "custom.fillOpacity", "value": 8 }
+          ]
+        }]
+      },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "sum(rate(k6_http_reqs_total[30s]))", "legendFormat": "Requests Per Second" },
+        { "datasource": "Prometheus", "expr": "k6_vus", "legendFormat": "Virtual Users" }
+      ]
+    },
+
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "PHP-FPM Workers — Active / Idle / Queue Depth",
+      "description": "Active = 20/20 and Queue > 0 = every request is waiting. This is why latency explodes at Level 0/1.",
+      "gridPos": { "x": 14, "y": 4, "w": 10, "h": 9 },
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Queue Depth" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" }}, { "id": "custom.fillOpacity", "value": 20 }] }
+        ]
+      },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "phpfpm_active_processes", "legendFormat": "Active Workers" },
+        { "datasource": "Prometheus", "expr": "phpfpm_idle_processes", "legendFormat": "Idle Workers" },
+        { "datasource": "Prometheus", "expr": "phpfpm_listen_queue", "legendFormat": "Queue Depth" }
+      ]
+    },
+
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "Latency Percentiles — p50 / p95 / p99",
+      "description": "p95 > 10 000 ms at Level 1 (87% error rate). After Level 2 FastCGI cache: < 200 ms.",
+      "gridPos": { "x": 0, "y": 13, "w": 14, "h": 8 },
+      "fieldConfig": {
+        "defaults": { "unit": "ms" },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "p99" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" }}] },
+          { "matcher": { "id": "byName", "options": "p95" }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" }}] },
+          { "matcher": { "id": "byName", "options": "p50" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" }}] }
+        ]
+      },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "k6_http_req_duration_p50 * 1000", "legendFormat": "p50" },
+        { "datasource": "Prometheus", "expr": "k6_http_req_duration_p95 * 1000", "legendFormat": "p95" },
+        { "datasource": "Prometheus", "expr": "k6_http_req_duration_p99 * 1000", "legendFormat": "p99" }
+      ]
+    },
+
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "MariaDB — Threads Running",
+      "description": "Spikes above 20 on a $12 VPS = database bottleneck. Redis object cache + FastCGI cache bring this back to 1–2.",
+      "gridPos": { "x": 14, "y": 13, "w": 10, "h": 8 },
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Threads Running" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" }}, { "id": "custom.fillOpacity", "value": 15 }] }
+        ]
+      },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "mysql_global_status_threads_running", "legendFormat": "Threads Running" },
+        { "datasource": "Prometheus", "expr": "mysql_global_status_threads_connected", "legendFormat": "Threads Connected" }
+      ]
+    },
+
+    {
+      "id": 30,
+      "type": "timeseries",
+      "title": "Requests: Total vs Hitting PHP-FPM vs Served from Cache",
+      "description": "Level 1: every request hits PHP-FPM (lines overlap). Level 2: gap = requests served from FastCGI cache without touching PHP at all. The gap IS the talk.",
+      "gridPos": { "x": 0, "y": 21, "w": 16, "h": 8 },
+      "fieldConfig": {
+        "defaults": { "unit": "reqps" },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Served from Cache (approx)" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" }}, { "id": "custom.fillOpacity", "value": 25 }] },
+          { "matcher": { "id": "byName", "options": "Hitting PHP-FPM" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" }}] }
+        ]
+      },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "rate(nginx_http_requests_total[30s])", "legendFormat": "Total Nginx Requests Per Second" },
+        { "datasource": "Prometheus", "expr": "rate(phpfpm_accepted_connections[30s])", "legendFormat": "Hitting PHP-FPM" },
+        { "datasource": "Prometheus", "expr": "rate(nginx_http_requests_total[30s]) - rate(phpfpm_accepted_connections[30s])", "legendFormat": "Served from Cache (approx)" }
+      ]
+    },
+
+    {
+      "id": 31,
+      "type": "timeseries",
+      "title": "Redis Object Cache — Hit Rate",
+      "description": "90%+ hit rate means Redis is absorbing most WP DB lookups. Even at Level 1 this helps — but FastCGI cache makes it irrelevant for anonymous traffic.",
+      "gridPos": { "x": 16, "y": 21, "w": 8, "h": 8 },
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit", "min": 0, "max": 1 },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Hit Rate" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" }}, { "id": "custom.fillOpacity", "value": 20 }] }
+        ]
+      },
+      "targets": [{
+        "datasource": "Prometheus",
+        "expr": "redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total)",
+        "legendFormat": "Hit Rate"
+      }]
+    }
+
+  ],
+  "schemaVersion": 39
+}

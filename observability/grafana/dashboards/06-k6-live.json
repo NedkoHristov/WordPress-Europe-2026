@@ -1,6 +1,6 @@
 {
   "uid": "wp-k6-live",
-  "title": "06 — k6 Live Load Test",
+  "title": "not-for-demo-06 — k6 Live Load Test",
   "description": "Real-time k6 metrics: VUs, RPS, p95 latency, error rate, checks. THE primary screenshot dashboard — one for each level transition.",
   "tags": ["k6", "load-test"],
   "timezone": "browser",

@@ -1,6 +1,6 @@
 {
   "uid": "wp-overview",
-  "title": "01 — WP Stack Overview (All Levels)",
+  "title": "not-for-demo-01 — WP Stack Overview (All Levels)",
   "description": "The single pane of glass — RPS, latency, CPU, RAM, all containers. Screenshot this during every level transition.",
   "tags": ["wordpress", "overview"],
   "timezone": "browser",

@@ -5,6 +5,8 @@
 
 COMPOSE := docker compose
 WP_PORT_VALUE := $(or $(shell grep -E '^WP_PORT=' .env 2>/dev/null | cut -d= -f2),8080)
+PREFIX     ?= snap
+TARGET_VU  ?= 45
 BLUE    := \033[1;34m
 GREEN   := \033[1;32m
 YELLOW  := \033[1;33m
@@ -36,6 +38,12 @@ help:
 	@echo "  make load-soak     1-hour soak (run overnight)"
 	@echo "  make load-woo      WooCommerce browse-add-checkout flow"
 	@echo ""
+	@echo "$(GREEN)Fast screenshot workflow (90s each, obs stack stays alive):$(RESET)"
+	@echo "  make warmup        Pre-heat OPcache + Redis (run before any snapshot)"
+	@echo "  make snapshot      90s burst on current level → screenshot"
+	@echo "  make snapshot-l1   Switch to Level 1 + warmup + snapshot"
+	@echo "  make snapshot-l2   Switch to Level 2 + warmup + snapshot"
+	@echo ""
 	@echo "$(GREEN)Utilities:$(RESET)"
 	@echo "  make setup         Install WordPress + seed demo content"
 	@echo "  make bloat         Seed 50k posts, 1k products, revisions, transients"
@@ -44,6 +52,11 @@ help:
 	@echo "  make reset         Nuclear reset — destroy volumes and rebuild"
 	@echo "  make logs          Follow all container logs"
 	@echo "  make status        Show running containers + resource usage"
+	@echo ""
+	@echo "$(GREEN)Full automation:$(RESET)"
+	@echo "  make full-run                   Clean slate → provision → bloat → all 3 level screenshots"
+	@echo "  SKIP_RESET=1 make full-run      Reuse existing containers (skip down -v)"
+	@echo "  SKIP_SETUP=1 SKIP_BLOAT=1 make full-run   Screenshots only (WP already ready)"
 	@echo ""
 
 # ─── LEVEL 0 — Apache baseline ───────────────────────────────────────────────
@@ -60,8 +73,9 @@ level-0:
 level-1:
 	@echo "$(YELLOW)▶ Level 1 — Nginx + PHP-FPM + OPcache + Redis$(RESET)"
 	$(COMPOSE) --profile apache down 2>/dev/null || true
+	# Restart only WP containers — obs stack keeps running so Prometheus history is preserved
 	NGINX_CONF=nginx.conf PHP_INI=php-tuned.ini FPM_CONF=www.conf MARIADB_CONFIG=00-baseline.cnf \
-		$(COMPOSE) --profile nginx --profile obs up -d --build
+		$(COMPOSE) --profile nginx up -d --build wordpress-fpm nginx
 	@echo "$(GREEN)✓ Level 1 running on http://localhost:8080$(RESET)"
 
 # ─── LEVEL 2 — + FastCGI cache + MariaDB tuning ──────────────────────────────
@@ -69,8 +83,9 @@ level-1:
 level-2:
 	@echo "$(YELLOW)▶ Level 2 — FastCGI page cache + MariaDB tuning$(RESET)"
 	$(COMPOSE) --profile apache down 2>/dev/null || true
+	# Restart only WP containers — obs stack keeps running so Prometheus history is preserved
 	NGINX_CONF=nginx-cache.conf PHP_INI=php-tuned.ini FPM_CONF=www.conf MARIADB_CONFIG=10-tuned.cnf \
-		$(COMPOSE) --profile nginx --profile obs up -d --build
+		$(COMPOSE) --profile nginx up -d --build wordpress-fpm nginx
 	@echo "$(GREEN)✓ Level 2 running on http://localhost:8080$(RESET)"
 	@echo "  FastCGI cache active — hit MISS then HIT in response headers"
 
@@ -137,6 +152,60 @@ load-compare:
 		-e BASE_URL=http://host.docker.internal:$(WP_PORT_VALUE) \
 		k6 run /scripts/level-compare.js | cat
 
+# ─── WARMUP + SNAPSHOT (fast screenshot workflow) ───────────────────────────
+# warmup: pre-heat OPcache and Redis so the first k6 request isn't a cold-start
+# outlier. 30 sequential GETs — takes ~5-10 seconds.
+.PHONY: warmup
+warmup:
+	@echo "$(YELLOW)▶ Warming up OPcache + Redis object cache (30 requests)…$(RESET)"
+	@for i in $$(seq 1 30); do \
+		curl -s -o /dev/null http://localhost:$(WP_PORT_VALUE)/ ; \
+		curl -s -o /dev/null http://localhost:$(WP_PORT_VALUE)/post-2498/ ; \
+		curl -s -o /dev/null http://localhost:$(WP_PORT_VALUE)/category/uncategorized/ ; \
+	done
+	@echo "$(GREEN)✓ Warmup done — OPcache hot, Redis primed$(RESET)"
+
+# snapshot: warmup + 90-second k6 burst with auto screenshot at peak VU
+# The watcher fires screenshot.js the moment k6_vus >= TARGET_VU (default 45).
+# Override prefix and target:  make snapshot PREFIX=l1 TARGET_VU=45
+.PHONY: snapshot
+snapshot: warmup
+	@echo "$(YELLOW)▶ Snapshot: k6 burst + watcher (prefix=$(PREFIX), target $(TARGET_VU) VU)$(RESET)"
+	@bash scripts/screenshot-watcher.sh --prefix "$(PREFIX)" --target-vu $(TARGET_VU) & \
+	WATCHER_PID=$$!; \
+	$(COMPOSE) --profile load run --rm \
+		-e BASE_URL=http://host.docker.internal:$(WP_PORT_VALUE) \
+		k6 run /scripts/snapshot.js | cat; \
+	kill $$WATCHER_PID 2>/dev/null || true; \
+	wait $$WATCHER_PID 2>/dev/null || true
+	@echo "$(GREEN)✓ Snapshot complete — screenshots/$(PREFIX)-*.png$(RESET)"
+
+# snapshot-l1 / snapshot-l2: switch level then immediately snapshot
+# obs stack stays alive the whole time — Prometheus keeps all history
+.PHONY: snapshot-l1
+snapshot-l1: level-1 warmup
+	@echo "$(YELLOW)▶ Snapshot L1: k6 burst + watcher (prefix=l1, target $(TARGET_VU) VU)$(RESET)"
+	@bash scripts/screenshot-watcher.sh --prefix l1 --target-vu $(TARGET_VU) & \
+	WATCHER_PID=$$!; \
+	$(COMPOSE) --profile load run --rm \
+		-e BASE_URL=http://host.docker.internal:$(WP_PORT_VALUE) \
+		k6 run /scripts/snapshot.js | cat; \
+	kill $$WATCHER_PID 2>/dev/null || true; \
+	wait $$WATCHER_PID 2>/dev/null || true
+	@echo "$(GREEN)✓ Snapshot L1 complete — screenshots/l1-*.png$(RESET)"
+
+.PHONY: snapshot-l2
+snapshot-l2: level-2 warmup
+	@echo "$(YELLOW)▶ Snapshot L2: k6 burst + watcher (prefix=l2, target $(TARGET_VU) VU)$(RESET)"
+	@bash scripts/screenshot-watcher.sh --prefix l2 --target-vu $(TARGET_VU) & \
+	WATCHER_PID=$$!; \
+	$(COMPOSE) --profile load run --rm \
+		-e BASE_URL=http://host.docker.internal:$(WP_PORT_VALUE) \
+		k6 run /scripts/snapshot.js | cat; \
+	kill $$WATCHER_PID 2>/dev/null || true; \
+	wait $$WATCHER_PID 2>/dev/null || true
+	@echo "$(GREEN)✓ Snapshot L2 complete — screenshots/l2-*.png$(RESET)"
+
 # ─── SETUP & CONTENT ─────────────────────────────────────────────────────────
 .PHONY: setup
 setup:
@@ -158,12 +227,27 @@ baseline:
 	$(COMPOSE) --profile nginx exec wordpress-fpm wp-perf-test.sh 2>/dev/null || \
 		$(COMPOSE) --profile apache exec wordpress-apache wp-perf-test.sh
 
+# screenshot: capture all dashboards for a given PREFIX and time window
+# Usage: make screenshot PREFIX=l1 (captures screenshots/l1-*.png)
+# Requires: node + playwright installed on host (npm install from repo root)
+PREFIX ?= snap
+.PHONY: screenshot
+screenshot:
+	@echo "$(YELLOW)▶ Capturing Grafana screenshots (prefix=$(PREFIX))$(RESET)"
+	@node scripts/screenshot.js $(PREFIX) $(shell date -d '3 minutes ago' +%s)000 $(shell date +%s)000
+	@echo "$(GREEN)✓ Saved to screenshots/$(PREFIX)-*.png$(RESET)"
+
 .PHONY: static-build
 static-build:
 	@echo "$(YELLOW)▶ Exporting static site$(RESET)"
 	mkdir -p static/export
 	bash static/build.sh
-
+# ─── FULL AUTOMATION ────────────────────────────────────────────────────
+# Clean slate → provision → bloat → L0/L1/L2 snapshots → screenshots
+# Skips: SKIP_RESET=1 SKIP_SETUP=1 SKIP_BLOAT=1
+.PHONY: full-run
+full-run:
+	bash scripts/full-run.sh
 # ─── UTILITIES ───────────────────────────────────────────────────────────────
 .PHONY: reset
 reset:

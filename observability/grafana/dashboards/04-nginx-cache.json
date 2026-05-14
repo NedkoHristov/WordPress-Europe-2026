@@ -1,6 +1,6 @@
 {
   "uid": "wp-nginx-cache",
-  "title": "04 — Nginx + FastCGI Cache",
+  "title": "not-for-demo-04 — Nginx + FastCGI Cache",
   "description": "Nginx connections, request rate, cache HIT/MISS/BYPASS ratio. The most dramatic slide: 95%+ HIT rate at Level 2.",
   "tags": ["nginx", "cache"],
   "timezone": "browser",

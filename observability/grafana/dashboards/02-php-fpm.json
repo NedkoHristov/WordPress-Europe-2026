@@ -1,6 +1,6 @@
 {
   "uid": "wp-php-fpm",
-  "title": "02 — PHP-FPM Deep Dive",
+  "title": "not-for-demo-02 — PHP-FPM Deep Dive",
   "description": "PHP-FPM pool internals: active/idle workers, queue depth, slow requests, OPcache hit ratio. Screenshot during Level 1 vs Level 0 comparison.",
   "tags": ["php-fpm", "opcache"],
   "timezone": "browser",

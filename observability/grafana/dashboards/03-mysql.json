@@ -1,6 +1,6 @@
 {
   "uid": "wp-mysql",
-  "title": "03 — MariaDB Deep Dive",
+  "title": "not-for-demo-03 — MariaDB Deep Dive",
   "description": "MySQL/MariaDB internals: threads, buffer pool, slow queries, InnoDB I/O. Screenshot during Level 0 crash (Threads_running spike) and Level 2 after tuning.",
   "tags": ["mysql", "mariadb"],
   "timezone": "browser",

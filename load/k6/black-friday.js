@@ -36,6 +36,7 @@ export default function () {
   const res = http.get(url, {
     headers: { 'Accept': 'text/html,application/json' },
     tags: { scenario: 'black_friday' },
+    timeout: '10s',  // fail fast when Apache is dead — prevents VUs stacking up
   });
   checkResponse(res, 'page');
   sleep(Math.random() * 2 + 0.5);
