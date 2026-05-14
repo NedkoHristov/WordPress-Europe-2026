@@ -63,6 +63,7 @@ help:
 .PHONY: level-0
 level-0:
 	@echo "$(YELLOW)▶ Level 0 — Apache + mod_php (crash baseline)$(RESET)"
+	$(COMPOSE) --profile nginx down 2>/dev/null || true
 	$(COMPOSE) --profile apache --profile obs up -d --build
 	@echo "$(GREEN)✓ Level 0 running on http://localhost:8080$(RESET)"
 	@echo "  Grafana: http://localhost:3000  (admin/grafana)"

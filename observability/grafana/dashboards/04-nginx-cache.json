@@ -21,7 +21,7 @@
       "title": "Accepted Connections / sec",
       "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
       "fieldConfig": { "defaults": { "unit": "cps" } },
-      "targets": [{ "datasource": "Prometheus", "expr": "rate(nginx_connections_accepted_total[30s])", "legendFormat": "conn/s" }]
+      "targets": [{ "datasource": "Prometheus", "expr": "rate(nginx_connections_accepted[30s])", "legendFormat": "conn/s" }]
     },
     {
       "id": 3,
@@ -59,7 +59,7 @@
       "fieldConfig": { "defaults": { "unit": "reqps" } },
       "targets": [
         { "datasource": "Prometheus", "expr": "rate(nginx_http_requests_total[1m])", "legendFormat": "Requests/sec" },
-        { "datasource": "Prometheus", "expr": "rate(nginx_connections_accepted_total[1m])", "legendFormat": "Connections/sec" }
+        { "datasource": "Prometheus", "expr": "rate(nginx_connections_accepted[1m])", "legendFormat": "Connections/sec" }
       ]
     },
     {

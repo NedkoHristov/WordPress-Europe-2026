@@ -207,6 +207,82 @@ Nginx Cache · Redis · k6 Live
 > **Same hardware. Same site. Same load.**
 > Every improvement is configuration and architecture — not more servers.
 
+<br>
+
+> 💡 **50 Virtual Users ≠ 50 visitors.** 50 VUs = 50 concurrent loops each making ~1 request/second = ~50 req/s sustained. *(See next slide.)*
+
+---
+
+## Key concept: what is a Virtual User?
+
+<div class="cols">
+<div>
+
+**NOT this:**
+<div class="card">
+
+❌ 50 VUs = 50 people who visited today
+❌ 50 VUs = 50 page loads total
+❌ 1 VU = 1 unique session
+
+</div>
+
+<br>
+
+**THIS:**
+<div class="card">
+
+✅ 1 VU = 1 browser-like loop running **continuously**
+
+```
+VU #1: GET /  → sleep 1-2s
+       → GET /?p=1  → sleep 1-2s
+       → GET /  → repeat forever
+```
+
+50 VUs = **50 concurrent loops**
+       = **~50 simultaneous open connections**
+       = **~50 requests/second sustained**
+
+</div>
+
+</div>
+<div>
+
+**The real-world translation:**
+<div class="card">
+
+Real users have **10–30× longer think time** between clicks.
+
+```
+50 VUs (k6, 1s think time)
+  ≈ 500–1,500 real simultaneous visitors
+```
+
+k6's 50 VUs is deliberately **aggressive** — it simulates a spike, not casual browsing.
+The crash happens faster and the improvements are more visible.
+
+</div>
+
+</div>
+</div>
+
+---
+
+## Key metric definitions
+
+| Term | What it actually means |
+|---|---|
+| **Virtual Users** | Concurrent browser-like loops running continuously — not unique visitors |
+| **requests/s** | Total HTTP responses served per second across all VUs |
+| **p95 latency** | 95% of requests were *faster* than this — 5% were slower |
+| **p99 latency** | The near-worst case — 1% of requests were slower than this |
+| **FPM workers** | PHP processes *currently executing code* right now |
+| **FPM queue depth** | Requests waiting for a free PHP worker — 0 = healthy, >0 = trouble |
+| **DB threads running** | MySQL queries *actively executing* — not just connected |
+| **Redis hit rate** | % of WordPress DB calls answered from RAM instead of MySQL |
+| **Cache offload** | % of HTTP requests served by nginx without PHP running at all |
+
 ---
 
 ## Observability stack
@@ -468,6 +544,26 @@ opcache.memory_consumption = 256  ; MB
 
 ---
 
+## L0 → L1: the jump
+
+| Metric | Level 0 | Level 1 | Δ |
+|---|---|---|---|
+| Crash at 50 Virtual Users | ❌ server buckles | ✅ stable | **crash eliminated** |
+| Peak requests/s | ~140 → **collapse** | **65** | stable throughput |
+| p95 Latency | ~3 s | **133 ms** | **−95%** |
+| p99 Latency | 6 s flat ceiling | **~350 ms** | **−94%** |
+| CPU @ 50 Virtual Users | ~100% | **25%** | −75% |
+| FPM queue depth | ~250 backlog | **0** | ✅ |
+| DB Threads peak | 20+ | **12.5** | −37% |
+| Redis hit ratio | — | **82.3%** | new layer added |
+
+<br>
+
+> The crash is gone. The server is stable at 50 Virtual Users.
+> But every request still hits PHP and MySQL — there is room to go further.
+
+---
+
 <!-- _class: screenshot -->
 
 ## 📸 Level 1 — PHP-FPM Workers & Request Rate
@@ -627,6 +723,26 @@ make level-2   # 10 seconds to switch. Same hardware.
 
 ---
 
+## L0 → L1 → L2: the progression
+
+| Metric | Level 0 | Level 1 | Level 2 |
+|---|---|---|---|
+| Peak requests/s | ~140 → 💥 | 65 | **70** |
+| p95 Latency | ~3 s 💥 | 133 ms | **79 ms** |
+| CPU @ 50 Virtual Users | ~100% | 25% | **18%** |
+| FPM workers (peak) | — | 14 / 20 | **11 / 20** |
+| FPM queue depth | ~250 | 0 | **0** |
+| DB Threads peak | 20+ | 12.5 | **3** |
+| FastCGI cache offload | 0% | 0% | **~70%** |
+| Redis hit ratio | — | 82.3% | **~80%+** |
+
+<br>
+
+> Level 2 does **more work with less resource** — 70% of requests never leave nginx.
+> DB threads: 12.5 → **3**. The bottleneck is gone.
+
+---
+
 <!-- _class: screenshot -->
 
 ## 📸 Level 2 — Nginx Cache: 9.94K requests, FPM Offload
@@ -737,34 +853,145 @@ After tuning:
 
 <div class="act-icon">⚡</div>
 
-# ACT IV
-## The Hybrid Static Leap
-### Level 4 — WordPress as a CMS, not a runtime
+# What's Next?
+## The Static Leap
+### Level 4 — Simply Static: WordPress as a CMS, not a runtime
 
 ---
 
-## The static export concept
+## Level 4 — the concept
 
-**Build time** (once, on each publish):
+**Build time** (once per publish cycle, after content is seeded):
 ```bash
-make static-build
-# wget crawls all published pages
-# saves complete HTML to static/export/
-# runs in ~30s for 2,500 posts
+# Setup — install the Simply Static plugin:
+wp plugin install simply-static --activate
+
+# Export — trigger once after content is ready:
+wp simply-static run
+# Crawls every published URL → flat HTML + assets
+# Output: static/export/  →  served by Nginx, zero PHP
 ```
+
+> **Simply Static** is a WordPress plugin — no external tooling needed.
+> Run once after seeding 2,500 posts + 500 products. Re-run after any publish.
+> Takes ~2–5 min. Output directory is the same `static/export/` Nginx already serves.
 
 **Runtime** (every anonymous request):
 ```
 Browser → Nginx
-  ├── /home         → static HTML file (0ms PHP)
-  ├── /post-2498/   → static HTML file (0ms PHP)
-  └── /checkout     → proxy → WordPress (live)
-     /wp-admin      → proxy → WordPress (live)
-     /wp-json/cart  → proxy → WordPress (live)
+  ├── /           → static/export/index.html   (0ms PHP)
+  ├── /post-2498/ → static/export/post-2498/index.html   (0ms PHP)
+  └── /checkout   → proxy → WordPress (live)
+     /wp-admin    → proxy → WordPress (live)
+     /wp-json/*   → proxy → WordPress (live)
 ```
 
 **WordPress only activates for cart / checkout / admin.**
-The rest is a static file server.
+Everything else is a static file served by Nginx from disk.
+
+---
+
+## Level 4 — Simply Static: expected numbers
+
+| Metric | Level 2 | Level 4 (estimated) |
+|---|---|---|
+| requests/s @ 50 Virtual Users | 70 | **500–1,500+** |
+| p95 Latency | 79 ms | **~3–5 ms** |
+| CPU @ 50 Virtual Users | 18% | **<3%** |
+| DB Threads | 3 | **~0** |
+| PHP workers needed | 11 | **0** |
+
+<br>
+
+**The math:**
+```
+Level 2 bottleneck: PHP executing 300+ DB queries per page
+  → Redis saves 82%, FastCGI saves another 70%
+  → PHP still runs for cache misses
+
+Level 4: nginx reads a .html file from disk
+  → ~0.1ms SSD seek (or OS page cache → ~0.01ms)
+  → 2 vCPU can sustain ~10,000 file serves/second
+  → FPM pool never touched for anonymous traffic
+```
+
+> **The trade-off:** content is stale until next `wp simply-static run`.
+> Perfect for: blogs, marketing sites, WooCommerce catalogues.
+> Use Level 2 for: live inventory, personalised pages, real-time data.
+
+---
+
+## Level 3 — Cloudflare CDN
+
+**The concept:**
+```
+Browser (anywhere in the world)
+  ↓
+Cloudflare Edge (300+ PoPs — nearest data center, <30ms away)
+  ├── CACHE HIT  → response from edge   (0ms origin, ~10–20ms to browser)
+  └── CACHE MISS → fetch from your VPS  (once per TTL, then cached at edge)
+```
+
+Your $12 VPS **only sees cache misses** — ~10–20% of total traffic during a spike.
+
+| Metric | Level 2 (direct) | Level 3 (+ Cloudflare) | Δ |
+|---|---|---|---|
+| TTFB for cached pages | 79 ms | **10–20 ms** | −75% |
+| Origin requests at peak | 100% | **~15–20%** | **−80%** |
+| Bandwidth from VPS | 100% | **~20–30%** | −75% |
+| DDoS protection | ❌ none | **✅ unlimited** | — |
+| Cost | $0 | **$0** | — |
+
+> Level 3 turns your $12 VPS into a globally distributed site.
+> The VPS becomes the **origin** — it only handles 10–20% of peak load.
+> No code changes. DNS cutover is the entire "deployment".
+
+---
+
+## Cloudflare Free Plan — what you get
+
+<div class="cols">
+<div>
+
+**Performance (free)**
+<div class="card">
+
+- 🌍 **Global CDN** — 300+ PoPs worldwide
+- ⚡ **Full page caching** via Cache Rules
+- 🖼️ **Polish** — automatic image compression
+- 🚀 **Rocket Loader** — async JS loading
+- 🔒 **Free SSL/TLS** — automatic HTTPS
+- 📡 **HTTP/2 + HTTP/3 (QUIC)** — automatic
+
+</div>
+</div>
+<div>
+
+**Security (free)**
+<div class="card">
+
+- 🛡️ **DDoS mitigation** — unlimited, unmetered
+- 🤖 **Bot Fight Mode** — basic bot blocking
+- 🔥 **WAF** — 5 custom rules
+- 🚫 **IP reputation** — automatic bad actor blocking
+- 📊 **Analytics** — requests, bandwidth, threats
+
+</div>
+</div>
+</div>
+
+<br>
+
+**One Cache Rule in the Cloudflare dashboard:**
+```
+URL:            *.yourdomain.com/*
+Cache Level:    Cache Everything
+Edge TTL:       1 hour
+Bypass cookie:  wordpress_logged_in.*|woocommerce_cart.*
+```
+
+> Same bypass logic as FastCGI cache — logged-in + cart users always hit origin.
+> Everything else: served from the nearest Cloudflare PoP. VPS stays idle.
 
 ---
 
@@ -776,10 +1003,11 @@ The rest is a static file server.
 | **1** | Nginx + FPM + OPcache + Redis | **133 ms** | 25% | 12.5 |
 | **2** | Level 1 + FastCGI cache + MariaDB | **79 ms** | 18% | 3 |
 | **3** | Level 2 + Cloudflare CDN | ~20 ms (edge) | <5% | <1 |
-| **4** | Level 2 + Static export | ~4 ms | <5% | <1 |
+| **4** | Level 2 + Simply Static | ~4 ms | <5% | <1 |
 
 <br>
 
+> ⬜ Levels 3 and 4 are architectural next steps — not live-demoed in this talk.
 > **Every improvement except Cloudflare costs exactly $0.**
 > It was configuration, architecture, and understanding the bottleneck.
 

@@ -67,7 +67,7 @@
           ]}
         }
       },
-      "targets": [{ "datasource": "Prometheus", "expr": "k6_http_req_duration_p95 * 1000", "legendFormat": "p95 Latency" }]
+      "targets": [{ "datasource": "Prometheus", "expr": "max(k6_http_req_duration_p95{expected_response=\"true\"}) * 1000", "legendFormat": "p95 Latency" }]
     },
 
     {
@@ -89,7 +89,7 @@
       },
       "targets": [{
         "datasource": "Prometheus",
-        "expr": "sum(rate(k6_http_reqs_total{expected_response=\"false\"}[30s])) / sum(rate(k6_http_reqs_total[30s]))",
+        "expr": "(sum(rate(k6_http_reqs_total{expected_response=\"false\"}[1m])) or vector(0)) / sum(rate(k6_http_reqs_total[1m]))",
         "legendFormat": "Error Rate"
       }]
     },
