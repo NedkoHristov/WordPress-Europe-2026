@@ -137,72 +137,52 @@ Nginx Cache · Redis · k6 Live</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="4" lang="C">
 <h2 id="the-journey">The journey</h2>
-<div style="font-size:0.78em">
 <table>
 <thead>
 <tr>
 <th>Level</th>
 <th>Stack</th>
-<th>p95 Latency</th>
-<th>requests/s</th>
-<th>CPU</th>
-<th>DB Threads</th>
-<th>New layer</th>
+<th>Key unlock</th>
+<th>Cost</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><span class="pill pill-red">0</span></td>
-<td>Apache + mod_php</td>
-<td><img class="emoji" draggable="false" alt="💥" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4a5.svg" data-marp-twemoji=""/> crash @ ~50 VU</td>
-<td>~140 → collapse</td>
-<td>100%</td>
-<td>20+</td>
+<td>Apache + mod_php — crash baseline</td>
 <td>—</td>
+<td>baseline</td>
 </tr>
 <tr>
 <td><span class="pill pill-blue">1</span></td>
-<td>+ Nginx · FPM · OPcache · Redis</td>
-<td><strong>133 ms</strong></td>
-<td><strong>65</strong></td>
-<td>25%</td>
-<td>12.5</td>
-<td>OPcache · Redis</td>
+<td>Nginx + FPM + OPcache + Redis</td>
+<td>Stops the crash</td>
+<td><strong>$0</strong></td>
 </tr>
 <tr>
 <td><span class="pill pill-blue">2</span></td>
-<td>+ FastCGI cache · MariaDB tuning</td>
-<td><strong>79 ms</strong></td>
-<td><strong>70</strong></td>
-<td>18%</td>
-<td>3</td>
-<td>FastCGI page cache</td>
+<td>Level 1 + FastCGI cache + MariaDB tuning</td>
+<td>70% PHP bypass</td>
+<td><strong>$0</strong></td>
 </tr>
 <tr>
 <td><span class="pill pill-gold">3</span></td>
-<td>+ Cloudflare CDN</td>
-<td><strong>~15 ms</strong> (edge)</td>
-<td>origin sees ~15%</td>
-<td>&lt;5%</td>
-<td>&lt;1</td>
-<td>Edge cache (300+ PoPs)</td>
+<td>Level 2 + Cloudflare CDN</td>
+<td>Edge absorbs peak load</td>
+<td>~$0–20/mo</td>
 </tr>
 <tr>
 <td><span class="pill pill-green">4</span></td>
-<td>+ Simply Static export</td>
-<td><strong>~4 ms</strong></td>
-<td>500–1,500+</td>
-<td>&lt;3%</td>
-<td>~0</td>
-<td>Static file serving</td>
+<td>Level 2 + Static export</td>
+<td>WP as a CMS, not a runtime</td>
+<td><strong>$0</strong></td>
 </tr>
 </tbody>
 </table>
-</div>
 <br />
 <blockquote>
-<p><strong>Same $12 VPS. Same WordPress site. Same k6 load script.</strong><br />
-Every improvement is configuration — not more hardware.</p>
+<p><strong>Same hardware. Same site. Same load.</strong><br />
+Every improvement is configuration and architecture — not more servers.</p>
 </blockquote>
 <br />
 <blockquote>
@@ -1298,7 +1278,7 @@ Under-provision → queue → 503.</p>
 </div>
 </div>
 <br />
-<div class="card" style="text-align:center;padding:20px">
+<div class="card">
 <p><img class="emoji" draggable="false" alt="🐙" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f419.svg" data-marp-twemoji=""/> <strong>github.com/NedkoHristov/WordPress-Europe-2026</strong></p>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-bash">git <span class="hljs-built_in">clone</span> … &amp;&amp; make level-1 &amp;&amp; make obs-up &amp;&amp; make setup &amp;&amp; make snapshot
 </code></pre>

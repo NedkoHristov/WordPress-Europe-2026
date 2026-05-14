@@ -194,18 +194,22 @@ Nginx Cache · Redis · k6 Live
 
 ## The journey
 
-| Level | Stack | Key unlock | Cost |
-|---|---|---|---|
-| <span class="pill pill-red">0</span> | Apache + mod_php — crash baseline | — | baseline |
-| <span class="pill pill-blue">1</span> | Nginx + FPM + OPcache + Redis | Stops the crash | **$0** |
-| <span class="pill pill-blue">2</span> | Level 1 + FastCGI cache + MariaDB tuning | 70% PHP bypass | **$0** |
-| <span class="pill pill-gold">3</span> | Level 2 + Cloudflare CDN | Edge absorbs peak load | ~$0–20/mo |
-| <span class="pill pill-green">4</span> | Level 2 + Static export | WP as a CMS, not a runtime | **$0** |
+<div style="font-size:0.78em">
+
+| Level | Stack | p95 Latency | requests/s | CPU | DB Threads | New layer |
+|---|---|---|---|---|---|---|
+| <span class="pill pill-red">0</span> | Apache + mod_php | 💥 crash @ ~50 VU | ~140 → collapse | 100% | 20+ | — |
+| <span class="pill pill-blue">1</span> | + Nginx · FPM · OPcache · Redis | **133 ms** | **65** | 25% | 12.5 | OPcache · Redis |
+| <span class="pill pill-blue">2</span> | + FastCGI cache · MariaDB tuning | **79 ms** | **70** | 18% | 3 | FastCGI page cache |
+| <span class="pill pill-gold">3</span> | + Cloudflare CDN | **~15 ms** (edge) | origin sees ~15% | <5% | <1 | Edge cache (300+ PoPs) |
+| <span class="pill pill-green">4</span> | + Simply Static export | **~4 ms** | 500–1,500+ | <3% | ~0 | Static file serving |
+
+</div>
 
 <br>
 
-> **Same hardware. Same site. Same load.**
-> Every improvement is configuration and architecture — not more servers.
+> **Same $12 VPS. Same WordPress site. Same k6 load script.**
+> Every improvement is configuration — not more hardware.
 
 <br>
 
