@@ -21,8 +21,8 @@ const DASHBOARDS = [
 (async () => {
   fs.mkdirSync(OUT_DIR, { recursive: true });
 
-  // Rotate existing screenshots into a dated backup folder before each run
-  const existing = fs.readdirSync(OUT_DIR).filter(f => f.endsWith('.png'));
+  // Rotate only the screenshots for this PREFIX into a dated backup folder
+  const existing = fs.readdirSync(OUT_DIR).filter(f => f.endsWith('.png') && f.startsWith(PREFIX + '-'));
   if (existing.length > 0) {
     const now = new Date();
     const dd  = String(now.getDate()).padStart(2, '0');
