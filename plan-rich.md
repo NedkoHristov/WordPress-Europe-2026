@@ -16,7 +16,6 @@
 <details>
 <summary>Slide content</summary>
 
-```
 <!-- _class: title -->
 
 # Stress Testing and Scaling WordPress
@@ -31,7 +30,6 @@ WordPress Europe 2026 · Kraków 🇵🇱
 
 `github.com/NedkoHristov/WordPress-Europe-2026`
 > `docker compose up` — every number in this talk is reproducible on your laptop
-```
 
 </details>
 
@@ -46,7 +44,6 @@ Walk through what we're testing: WordPress + WooCommerce, 2,500 posts, 500 produ
 <details>
 <summary>Slide content</summary>
 
-```
 ## The setup
 
 <div class="cols">
@@ -99,7 +96,6 @@ Nginx Cache · Redis · k6 Live
 
 </div>
 </div>
-```
 
 </details>
 
@@ -114,7 +110,6 @@ Preview the 5-level table. Key message: same VPS, same site, same k6 script. Eve
 <details>
 <summary>Slide content</summary>
 
-```
 ## The journey
 
 <div style="font-size:0.78em">
@@ -137,7 +132,6 @@ Preview the 5-level table. Key message: same VPS, same site, same k6 script. Eve
 <br>
 
 > 💡 **50 Virtual Users ≠ 50 visitors.** 50 VUs = 50 concurrent loops each making ~1 request/second = ~50 req/s sustained. *(See next slide.)*
-```
 
 </details>
 
@@ -152,7 +146,6 @@ Explain VUs. 50 VUs ≠ 50 visitors. Each VU is a continuous loop — ~1 req/s e
 <details>
 <summary>Slide content</summary>
 
-```
 ## Key concept: what is a Virtual User?
 
 <div class="cols">
@@ -206,7 +199,6 @@ The crash happens faster and the improvements are more visible.
 
 </div>
 </div>
-```
 
 </details>
 
@@ -221,7 +213,6 @@ Quick glossary. Highlight p95: "95% of requests finished faster than this number
 <details>
 <summary>Slide content</summary>
 
-```
 ## Key metric definitions
 
 | Term | What it actually means |
@@ -235,7 +226,6 @@ Quick glossary. Highlight p95: "95% of requests finished faster than this number
 | **DB threads running** | MySQL queries *actively executing* — not just connected |
 | **Redis hit rate** | % of WordPress DB calls answered from RAM instead of MySQL |
 | **Cache offload** | % of HTTP requests served by nginx without PHP running at all |
-```
 
 </details>
 
@@ -250,7 +240,6 @@ Show the stack diagram. "Prometheus + 6 exporters + Grafana + Loki. Every number
 <details>
 <summary>Slide content</summary>
 
-```
 ## Observability stack
 
 ```
@@ -270,7 +259,6 @@ k6 ──remote-write──▶ Prometheus ◀── node-exporter  (CPU, RAM, di
 
 > Every number you see on screen is a **real metric from a real process.**
 > No synthetic benchmarks. No cherry-picked results.
-```
 
 </details>
 
@@ -289,7 +277,6 @@ Build tension. "Let's see what happens when real traffic hits a default WordPres
 <details>
 <summary>Slide content</summary>
 
-```
 <!-- _class: act -->
 
 <div class="act-icon">💥</div>
@@ -297,7 +284,6 @@ Build tension. "Let's see what happens when real traffic hits a default WordPres
 # ACT I
 ## The Crash
 ### Level 0 — Apache + mod_php
-```
 
 </details>
 
@@ -312,7 +298,6 @@ Explain the process model: 1 OS process per connection. Each WP request = 300+ D
 <details>
 <summary>Slide content</summary>
 
-```
 ## Level 0 — How Apache prefork works
 
 **Each connection = one OS process**
@@ -334,7 +319,6 @@ Browser connects
 
 > The process model was designed for static files in 1996.
 > WordPress averages **300+ database queries per page.**
-```
 
 </details>
 
@@ -349,7 +333,6 @@ Walk through the formula on screen. (2048MB - 512MB) / 32MB = 47 workers max. Sh
 <details>
 <summary>Slide content</summary>
 
-```
 ## The Apache math
 
 $$\text{Max safe workers} = \frac{\text{RAM} - \text{OS + DB + Redis overhead}}{\text{RAM per PHP-WordPress process}}$$
@@ -369,7 +352,6 @@ $$= \frac{2048 \text{ MB} - 512 \text{ MB}}{32 \text{ MB/worker}} = \textbf{47 w
 
 > This is not a bug. It is arithmetic.
 > The "crash" happens at a completely predictable, calculable virtual user count.
-```
 
 </details>
 
@@ -389,13 +371,11 @@ $$= \frac{2048 \text{ MB} - 512 \text{ MB}}{32 \text{ MB/worker}} = \textbf{47 w
 <details>
 <summary>Slide content</summary>
 
-```
 <!-- _class: screenshot -->
 
 ## 📸 Level 0 — Baseline (50 Virtual Users — before the storm)
 
 ![w:1060](screenshots/l0-00-demo.png)
-```
 
 </details>
 
@@ -415,13 +395,11 @@ $$= \frac{2048 \text{ MB} - 512 \text{ MB}}{32 \text{ MB/worker}} = \textbf{47 w
 <details>
 <summary>Slide content</summary>
 
-```
 <!-- _class: screenshot -->
 
 ## 📸 Level 0 — The Crash (Black Friday ramp: 0 → 500 Virtual Users)
 
 ![w:1060](screenshots/l0-crash-00-demo.png)
-```
 
 </details>
 
@@ -436,7 +414,6 @@ Walk the table row by row. Key callouts: p95 2.9s → 15× worse than L1. Queue 
 <details>
 <summary>Slide content</summary>
 
-```
 ## Level 0 — reading the crash
 
 | Panel | Metric | Value | What it means |
@@ -455,7 +432,6 @@ Walk the table row by row. Key callouts: p95 2.9s → 15× worse than L1. Queue 
 > **The crash is visible in one chart:**
 > Green requests/s goes up, then down, while Blue Virtual Users keep climbing.
 > The server is no longer responding to more load — only less.
-```
 
 </details>
 
@@ -474,7 +450,6 @@ Walk the table row by row. Key callouts: p95 2.9s → 15× worse than L1. Queue 
 <details>
 <summary>Slide content</summary>
 
-```
 <!-- _class: act -->
 
 <div class="act-icon">🩹</div>
@@ -482,7 +457,6 @@ Walk the table row by row. Key callouts: p95 2.9s → 15× worse than L1. Queue 
 # ACT II
 ## Stop the Bleeding
 ### Level 1 — Nginx + PHP-FPM + OPcache + Redis
-```
 
 </details>
 
@@ -497,7 +471,6 @@ List the three: (1) Replace Apache with Nginx — event-driven, zero RAM per idl
 <details>
 <summary>Slide content</summary>
 
-```
 ## Level 1 — Three changes, zero cost
 
 **1. Nginx (event-driven)**
@@ -518,7 +491,6 @@ Nginx queues connections externally.
 ```bash
 make level-1   # 10 seconds to switch
 ```
-```
 
 </details>
 
@@ -533,7 +505,6 @@ Show the two-panel comparison. Without: every single request does a full disk re
 <details>
 <summary>Slide content</summary>
 
-```
 ## OPcache — the biggest free win
 
 <div class="cols">
@@ -579,7 +550,6 @@ opcache.enable = 1
 opcache.validate_timestamps = 0   ; never re-check disk (production)
 opcache.memory_consumption = 256  ; MB
 ```
-```
 
 </details>
 
@@ -597,13 +567,11 @@ opcache.memory_consumption = 256  ; MB
 <details>
 <summary>Slide content</summary>
 
-```
 <!-- _class: screenshot -->
 
 ## 📸 Level 1 — Demo Dashboard (50 Virtual Users)
 
 ![w:1060](screenshots/l1-00-demo.png)
-```
 
 </details>
 
@@ -618,7 +586,6 @@ Point at each panel. FPM: 14 active workers / 20 max, queue 0. MariaDB: 12.5 thr
 <details>
 <summary>Slide content</summary>
 
-```
 ## Level 1 — reading the dashboard
 
 <div class="cols3">
@@ -656,7 +623,6 @@ Point at each panel. FPM: 14 active workers / 20 max, queue 0. MariaDB: 12.5 thr
 
 </div>
 </div>
-```
 
 </details>
 
@@ -673,7 +639,6 @@ Walk the comparison table. p95: 3s → 133ms. CPU: 100% → 25%. Errors: crash �
 <details>
 <summary>Slide content</summary>
 
-```
 ## L0 → L1: the jump
 
 | Metric | Level 0 | Level 1 | Δ |
@@ -691,7 +656,6 @@ Walk the comparison table. p95: 3s → 133ms. CPU: 100% → 25%. Errors: crash �
 
 > The crash is gone. The server is stable at 50 Virtual Users.
 > But every request still hits PHP and MySQL — there is room to go further.
-```
 
 </details>
 
@@ -709,13 +673,11 @@ Walk the comparison table. p95: 3s → 133ms. CPU: 100% → 25%. Errors: crash �
 <details>
 <summary>Slide content</summary>
 
-```
 <!-- _class: screenshot -->
 
 ## 📸 Level 1 — PHP-FPM Workers & Request Rate
 
 ![w:1060](screenshots/l1-02-php-fpm.png)
-```
 
 </details>
 
@@ -733,13 +695,11 @@ Walk the comparison table. p95: 3s → 133ms. CPU: 100% → 25%. Errors: crash �
 <details>
 <summary>Slide content</summary>
 
-```
 <!-- _class: screenshot -->
 
 ## 📸 Level 1 — Redis: 82% Hit Rate, 6K ops/s
 
 ![w:1060](screenshots/l1-05-redis.png)
-```
 
 </details>
 
@@ -754,7 +714,6 @@ Walk through the code example: WP_Query → Redis HIT → 0.1ms. After warmup My
 <details>
 <summary>Slide content</summary>
 
-```
 ## Level 1 — what Redis is actually doing
 
 **46,000 cached keys · 14.5 MB · 6,000 ops/s at peak**
@@ -776,7 +735,6 @@ MySQL sees ~54 queries/request instead of 300+.
 > Redis did not prevent the crash at Level 0 because we never got there.
 > It **would** delay the crash significantly — but doesn't eliminate it.
 > That requires removing PHP from the hot path entirely.
-```
 
 </details>
 
@@ -795,7 +753,6 @@ MySQL sees ~54 queries/request instead of 300+.
 <details>
 <summary>Slide content</summary>
 
-```
 <!-- _class: act -->
 
 <div class="act-icon">🚀</div>
@@ -803,7 +760,6 @@ MySQL sees ~54 queries/request instead of 300+.
 # ACT III
 ## Cache Everything
 ### Level 2 — FastCGI page cache + MariaDB tuning
-```
 
 </details>
 
@@ -818,7 +774,6 @@ Read the blockquote slowly. "Home page. Category. Blog post. Shop. PHP runs. MyS
 <details>
 <summary>Slide content</summary>
 
-```
 ## The key insight
 
 > **Most WordPress page requests return identical HTML for every anonymous visitor.**
@@ -849,7 +804,6 @@ Logged-in · Cart · Checkout · Admin
 
 </div>
 </div>
-```
 
 </details>
 
@@ -864,7 +818,6 @@ Walk through the config. cache_path — where pages are stored. fastcgi_cache_ke
 <details>
 <summary>Slide content</summary>
 
-```
 ## Level 2 — nginx config
 
 ```nginx
@@ -893,7 +846,6 @@ location ~ \.php$ {
 ```bash
 make level-2   # 10 seconds to switch. Same hardware.
 ```
-```
 
 </details>
 
@@ -911,13 +863,11 @@ make level-2   # 10 seconds to switch. Same hardware.
 <details>
 <summary>Slide content</summary>
 
-```
 <!-- _class: screenshot -->
 
 ## 📸 Level 2 — Demo Dashboard (50 Virtual Users)
 
 ![w:1060](screenshots/l2-00-demo.png)
-```
 
 </details>
 
@@ -932,7 +882,6 @@ Key callout: FPM only handling 20 req/s while Nginx is serving 70 req/s. Gap of 
 <details>
 <summary>Slide content</summary>
 
-```
 ## Level 2 — reading the dashboard
 
 <div class="cols3">
@@ -967,7 +916,6 @@ Key callout: FPM only handling 20 req/s while Nginx is serving 70 req/s. Gap of 
 
 </div>
 </div>
-```
 
 </details>
 
@@ -982,7 +930,6 @@ Walk the three-column table. The story in one slide: crash → stable → fast. 
 <details>
 <summary>Slide content</summary>
 
-```
 ## L0 → L1 → L2: the progression
 
 | Metric | Level 0 | Level 1 | Level 2 |
@@ -1000,7 +947,6 @@ Walk the three-column table. The story in one slide: crash → stable → fast. 
 
 > Level 2 does **more work with less resource** — 70% of requests never leave nginx.
 > DB threads: 12.5 → **3**. The bottleneck is gone.
-```
 
 </details>
 
@@ -1020,13 +966,11 @@ Walk the three-column table. The story in one slide: crash → stable → fast. 
 <details>
 <summary>Slide content</summary>
 
-```
 <!-- _class: screenshot -->
 
 ## 📸 Level 2 — Nginx Cache: 9.94K requests, FPM Offload
 
 ![w:1060](screenshots/l2-04-nginx-cache.png)
-```
 
 </details>
 
@@ -1041,7 +985,6 @@ Walk the ASCII diagram: 9,940 total requests in 5 min. ~7,000 from cache (<10ms,
 <details>
 <summary>Slide content</summary>
 
-```
 ## Level 2 — the FPM offload panel explained
 
 **Bottom-right panel: PHP-FPM Offload — Requests NOT hitting PHP**
@@ -1066,7 +1009,6 @@ Gap                  ████████████████          ~
 > **This is the money slide.**
 > The gap between the two lines is PHP execution that never happened.
 > Scale that to a Black Friday spike — 10× traffic hits nginx, not your server.
-```
 
 </details>
 
@@ -1084,13 +1026,11 @@ Gap                  ████████████████          ~
 <details>
 <summary>Slide content</summary>
 
-```
 <!-- _class: screenshot -->
 
 ## 📸 Level 2 — PHP-FPM: Steady at 10-11 Workers
 
 ![w:1060](screenshots/l2-02-php-fpm.png)
-```
 
 </details>
 
@@ -1105,7 +1045,6 @@ Show the two configs side by side. Key change: buffer pool 128MB → 512MB. "Wor
 <details>
 <summary>Slide content</summary>
 
-```
 ## MariaDB tuning — Level 2
 
 <div class="cols">
@@ -1144,7 +1083,6 @@ After tuning:
 
 </div>
 </div>
-```
 
 </details>
 
@@ -1159,7 +1097,6 @@ Walk the table. Key callout: L2 does 24% more requests with 29% less CPU. DB thr
 <details>
 <summary>Slide content</summary>
 
-```
 ## Level 1 vs Level 2 — the real numbers
 
 | Metric | Level 1 | Level 2 | Change |
@@ -1179,7 +1116,6 @@ Walk the table. Key callout: L2 does 24% more requests with 29% less CPU. DB thr
 > L2 does **more** work with **less** resource because 70% of requests
 > never leave nginx. The remaining 30% are served faster too —
 > because MariaDB has headroom now.
-```
 
 </details>
 
@@ -1198,7 +1134,6 @@ Walk the table. Key callout: L2 does 24% more requests with 29% less CPU. DB thr
 <details>
 <summary>Slide content</summary>
 
-```
 <!-- _class: act -->
 
 <div class="act-icon">⚡</div>
@@ -1206,7 +1141,6 @@ Walk the table. Key callout: L2 does 24% more requests with 29% less CPU. DB thr
 # What's Next?
 ## The Static Leap
 ### Level 4 — Simply Static: WordPress as a CMS, not a runtime
-```
 
 </details>
 
@@ -1221,7 +1155,6 @@ Explain Simply Static: crawls every published URL → flat HTML. Runtime: Nginx 
 <details>
 <summary>Slide content</summary>
 
-```
 ## Level 4 — the concept
 
 **Build time** (once per publish cycle, after content is seeded):
@@ -1251,7 +1184,6 @@ Browser → Nginx
 
 **WordPress only activates for cart / checkout / admin.**
 Everything else is a static file served by Nginx from disk.
-```
 
 </details>
 
@@ -1266,7 +1198,6 @@ Walk the comparison table. 500-1,500+ req/s vs 70. p95 3-5ms vs 79ms. PHP worker
 <details>
 <summary>Slide content</summary>
 
-```
 ## Level 4 — Simply Static: expected numbers
 
 | Metric | Level 2 | Level 4 (estimated) |
@@ -1294,7 +1225,6 @@ Level 4: nginx reads a .html file from disk
 > **The trade-off:** content is stale until next `wp simply-static run`.
 > Perfect for: blogs, marketing sites, WooCommerce catalogues.
 > Use Level 2 for: live inventory, personalised pages, real-time data.
-```
 
 </details>
 
@@ -1309,7 +1239,6 @@ Explain the edge model. Your VPS only sees cache misses — 10-20% of total traf
 <details>
 <summary>Slide content</summary>
 
-```
 ## Level 3 — Cloudflare CDN
 
 **The concept:**
@@ -1334,7 +1263,6 @@ Your $12 VPS **only sees cache misses** — ~10–20% of total traffic during a 
 > Level 3 turns your $12 VPS into a globally distributed site.
 > The VPS becomes the **origin** — it only handles 10–20% of peak load.
 > No code changes. DNS cutover is the entire "deployment".
-```
 
 </details>
 
@@ -1349,7 +1277,6 @@ Walk through what you get for free: global CDN, DDoS protection, free SSL, HTTP/
 <details>
 <summary>Slide content</summary>
 
-```
 ## Cloudflare Free Plan — what you get
 
 <div class="cols">
@@ -1394,7 +1321,6 @@ Bypass cookie:  wordpress_logged_in.*|woocommerce_cart.*
 
 > Same bypass logic as FastCGI cache — logged-in + cart users always hit origin.
 > Everything else: served from the nearest Cloudflare PoP. VPS stays idle.
-```
 
 </details>
 
@@ -1409,7 +1335,6 @@ Five levels in one table. "Every improvement except Cloudflare costs exactly zer
 <details>
 <summary>Slide content</summary>
 
-```
 ## The full picture
 
 | Level | Stack | p95 Latency | CPU @ 50 Virtual Users | DB Threads |
@@ -1425,7 +1350,6 @@ Five levels in one table. "Every improvement except Cloudflare costs exactly zer
 > ⬜ Levels 3 and 4 are architectural next steps — not live-demoed in this talk.
 > **Every improvement except Cloudflare costs exactly $0.**
 > It was configuration, architecture, and understanding the bottleneck.
-```
 
 </details>
 
@@ -1440,7 +1364,6 @@ Walk the ASCII diagram top to bottom. Each layer absorbs 70-95% of what reaches 
 <details>
 <summary>Slide content</summary>
 
-```
 ## The full cache hierarchy
 
 ```
@@ -1463,7 +1386,6 @@ Request from browser
 
 > Each layer absorbed ~70–95% of what reached it.
 > MariaDB only sees the requests Redis couldn't answer.
-```
 
 </details>
 
@@ -1482,7 +1404,6 @@ Four takeaways. Emphasise #1: "Set up Prometheus and Grafana before you need the
 <details>
 <summary>Slide content</summary>
 
-```
 ## Lessons learned
 
 <div class="cols">
@@ -1544,7 +1465,6 @@ Measure with Grafana, then calculate.
 
 </div>
 </div>
-```
 
 </details>
 
@@ -1559,7 +1479,6 @@ All free, all open source. Point to the repo URL. "git clone, make level-1, make
 <details>
 <summary>Slide content</summary>
 
-```
 ## The tools — all free, all open source
 
 <div class="cols">
@@ -1597,7 +1516,6 @@ git clone … && make level-1 && make obs-up && make setup && make snapshot
 Every level. Every screenshot. Every number. Reproducible.
 
 </div>
-```
 
 </details>
 
@@ -1618,7 +1536,6 @@ Open for Q&A. Repeat repo URL. Leave the slide up.
 <details>
 <summary>Slide content</summary>
 
-```
 <!-- _class: title -->
 
 # Thank you!
@@ -1638,7 +1555,6 @@ Senior DevOps Engineer @ Nemetschek Bulgaria
 
 > *"The best time to add monitoring was before the crash.*
 > *The second best time is right now."*
-```
 
 </details>
 
