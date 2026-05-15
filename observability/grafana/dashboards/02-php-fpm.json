@@ -60,7 +60,7 @@
       "description": "Requests exceeding 2 second threshold — watch this during load spikes",
       "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
       "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 5, "color": "yellow" }, { "value": 20, "color": "red" }] } } },
-      "targets": [{ "datasource": "Prometheus", "expr": "phpfpm_slow_requests_total", "legendFormat": "Slow Requests" }]
+      "targets": [{ "datasource": "Prometheus", "expr": "phpfpm_slow_requests", "legendFormat": "Slow Requests" }]
     },
     {
       "id": 6,
@@ -68,7 +68,7 @@
       "title": "Requests / sec",
       "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
       "fieldConfig": { "defaults": { "unit": "reqps" } },
-      "targets": [{ "datasource": "Prometheus", "expr": "rate(phpfpm_accepted_connections_total[30s])", "legendFormat": "req/s" }]
+      "targets": [{ "datasource": "Prometheus", "expr": "rate(phpfpm_accepted_connections[30s])", "legendFormat": "req/s" }]
     },
     {
       "id": 10,
@@ -81,7 +81,7 @@
         { "datasource": "Prometheus", "expr": "phpfpm_active_processes", "legendFormat": "Active Workers" },
         { "datasource": "Prometheus", "expr": "phpfpm_idle_processes", "legendFormat": "Idle Workers" },
         { "datasource": "Prometheus", "expr": "phpfpm_listen_queue", "legendFormat": "Queue Depth" },
-        { "datasource": "Prometheus", "expr": "phpfpm_max_children_reached_total", "legendFormat": "Max Children Reached (cumulative)" }
+        { "datasource": "Prometheus", "expr": "phpfpm_max_children_reached", "legendFormat": "Max Children Reached (cumulative)" }
       ]
     },
     {
@@ -115,7 +115,7 @@
       "gridPos": { "x": 12, "y": 12, "w": 12, "h": 6 },
       "fieldConfig": { "defaults": { "unit": "decmbytes" } },
       "targets": [
-        { "datasource": "Prometheus", "expr": "container_memory_rss{pod_name=~\".*fpm.*\"} / 1024 / 1024", "legendFormat": "{{pod_name}}" }
+        { "datasource": "Prometheus", "expr": "container_memory_rss{container_label_com_docker_compose_service=\"wordpress-fpm\"} / 1024 / 1024", "legendFormat": "{{name}}" }
       ]
     }
   ],

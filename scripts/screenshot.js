@@ -20,6 +20,28 @@ const DASHBOARDS = [
 
 (async () => {
   fs.mkdirSync(OUT_DIR, { recursive: true });
+
+  // Rotate existing screenshots into a dated backup folder before each run
+  const existing = fs.readdirSync(OUT_DIR).filter(f => f.endsWith('.png'));
+  if (existing.length > 0) {
+    const now = new Date();
+    const dd  = String(now.getDate()).padStart(2, '0');
+    const mm  = String(now.getMonth() + 1).padStart(2, '0');
+    const yy  = String(now.getFullYear()).slice(-2);
+    const dateStr = dd + mm + yy;
+    let idx = 1;
+    let backupDir;
+    do {
+      backupDir = path.join(OUT_DIR, `screenshots-${dateStr}-${String(idx).padStart(3, '0')}`);
+      idx++;
+    } while (fs.existsSync(backupDir));
+    fs.mkdirSync(backupDir, { recursive: true });
+    for (const f of existing) {
+      fs.renameSync(path.join(OUT_DIR, f), path.join(backupDir, f));
+    }
+    console.log(`Rotated ${existing.length} screenshot(s) → ${path.basename(backupDir)}/`);
+  }
+
   const browser = await chromium.launch({ args: ['--no-sandbox'] });
   const page = await (await browser.newContext({ viewport: { width: 1920, height: 1080 } })).newPage();
 

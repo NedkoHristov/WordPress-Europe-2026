@@ -238,6 +238,20 @@ screenshot:
 	@node scripts/screenshot.js $(PREFIX) $(shell date -d '3 minutes ago' +%s)000 $(shell date +%s)000
 	@echo "$(GREEN)✓ Saved to screenshots/$(PREFIX)-*.png$(RESET)"
 
+# ─── SLIDES ──────────────────────────────────────────────────────────────────
+# Regenerate all presentation exports from SLIDES-RICH.md
+# Requires: npx marp-cli, Playwright Chromium, LibreOffice
+CHROME ?= /home/nedko/.cache/ms-playwright/chromium-1223/chrome-linux64/chrome
+.PHONY: slides
+slides:
+	@echo "$(YELLOW)▶ Generating SLIDES-RICH.html$(RESET)"
+	npx @marp-team/marp-cli SLIDES-RICH.md --allow-local-files --html --output SLIDES-RICH.html
+	@echo "$(YELLOW)▶ Generating SLIDES-RICH.pptx$(RESET)"
+	CHROME_PATH=$(CHROME) npx @marp-team/marp-cli SLIDES-RICH.md --allow-local-files --pptx --output SLIDES-RICH.pptx
+	@echo "$(YELLOW)▶ Generating SLIDES-RICH-editable.pptx$(RESET)"
+	CHROME_PATH=$(CHROME) npx @marp-team/marp-cli SLIDES-RICH.md --allow-local-files --pptx --pptx-editable --output SLIDES-RICH-editable.pptx
+	@echo "$(GREEN)✓ Slides ready: SLIDES-RICH.html · SLIDES-RICH.pptx · SLIDES-RICH-editable.pptx$(RESET)"
+
 .PHONY: static-build
 static-build:
 	@echo "$(YELLOW)▶ Exporting static site$(RESET)"

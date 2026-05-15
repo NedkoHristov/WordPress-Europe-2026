@@ -381,46 +381,72 @@ The &quot;crash&quot; happens at a completely predictable, calculable virtual us
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="12" lang="C">
 <h2 id="level-0--reading-the-crash">Level 0 — reading the crash</h2>
-<div class="cols3">
-<div class="metric metric-red"><div class="num">~140</div><div class="lbl">Peak requests/s — then collapse</div></div>
-<div class="metric metric-red"><div class="num">2.9 s</div><div class="lbl">p95 Latency at crash</div></div>
-<div class="metric metric-red"><div class="num">6 s</div><div class="lbl">p99 — flat ceiling</div></div>
-</div>
+<table>
+<thead>
+<tr>
+<th>Panel</th>
+<th>Metric</th>
+<th>Value</th>
+<th>What it means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>VU &amp; req/s</td>
+<td>Peak requests/s</td>
+<td>~140 → <strong>collapse</strong></td>
+<td>Server buckled — req/s fell while VUs kept climbing</td>
+</tr>
+<tr>
+<td>VU &amp; req/s</td>
+<td>req/s at 500 VU</td>
+<td><strong>24.5</strong></td>
+<td>83% of requests failing or queued</td>
+</tr>
+<tr>
+<td>Latency</td>
+<td>p95</td>
+<td><strong>2.9 s</strong></td>
+<td>15× worse than Level 1</td>
+</tr>
+<tr>
+<td>Latency</td>
+<td>p99</td>
+<td><strong>6 s flat</strong></td>
+<td>Hard ceiling — connections timing out</td>
+</tr>
+<tr>
+<td>Latency</td>
+<td>p50</td>
+<td>~1 s</td>
+<td>Even the median is unusable</td>
+</tr>
+<tr>
+<td>PHP-FPM</td>
+<td>Queue depth</td>
+<td><strong>~250</strong></td>
+<td>Catastrophic backlog — workers exhausted</td>
+</tr>
+<tr>
+<td>PHP-FPM</td>
+<td>Active workers</td>
+<td>maxed → dropping</td>
+<td>Workers timing out under load</td>
+</tr>
+<tr>
+<td>MariaDB</td>
+<td>Threads running</td>
+<td><strong>20</strong> (max)</td>
+<td>Every PHP request holding a DB connection</td>
+</tr>
+</tbody>
+</table>
 <br />
-<div class="cols">
-<div>
-<p><strong>Virtual Users &amp; requests/s chart — top left:</strong></p>
-<ul>
-<li>Blue Virtual Users line climbs to <strong>500</strong></li>
-<li>Green requests/s line peaks ~140 then <strong>collapses</strong> — the server buckles</li>
-<li>At the screenshot moment: only 24.5 requests/s from 500 Virtual Users = <strong>83% of requests failing or queued</strong></li>
-</ul>
-<p><strong>Latency chart — bottom left:</strong></p>
-<ul>
-<li>p99 (red): <strong>flat line at 6 seconds</strong> from the first minute</li>
-<li>p95 (orange): ~3 seconds — 15× worse than Level 1</li>
-<li>p50 (green): ~1 second — even the median is unusable</li>
-</ul>
-</div>
-<div>
-<p><strong>FPM Workers — top right:</strong></p>
-<ul>
-<li>Queue Depth (red): spiked to <strong>~250</strong> ← catastrophic backlog</li>
-<li>Active Workers: maxed out, then started dropping as workers timed out</li>
-</ul>
-<p><strong>MariaDB — bottom right:</strong></p>
-<ul>
-<li>Threads Running spiked to <strong>20</strong> and stayed there</li>
-<li>Connection queue fully saturated</li>
-<li>Every PHP request holding a DB connection waiting on I/O</li>
-</ul>
 <blockquote>
 <p><strong>The crash is visible in one chart:</strong><br />
 Green requests/s goes up, then down, while Blue Virtual Users keep climbing.<br />
 The server is no longer responding to more load — only less.</p>
 </blockquote>
-</div>
-</div>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="13" data-class="act" lang="C" class="act" style="--class:act;"><div class="act-icon">🩹</div>
 <h1 id="act-ii">ACT II</h1>

@@ -377,45 +377,22 @@ $$= \frac{2048 \text{ MB} - 512 \text{ MB}}{32 \text{ MB/worker}} = \textbf{47 w
 
 ## Level 0 — reading the crash
 
-<div class="cols3">
-<div class="metric metric-red"><div class="num">~140</div><div class="lbl">Peak requests/s — then collapse</div></div>
-<div class="metric metric-red"><div class="num">2.9 s</div><div class="lbl">p95 Latency at crash</div></div>
-<div class="metric metric-red"><div class="num">6 s</div><div class="lbl">p99 — flat ceiling</div></div>
-</div>
+| Panel | Metric | Value | What it means |
+|---|---|---|---|
+| VU & req/s | Peak requests/s | ~140 → **collapse** | Server buckled — req/s fell while VUs kept climbing |
+| VU & req/s | req/s at 500 VU | **24.5** | 83% of requests failing or queued |
+| Latency | p95 | **2.9 s** | 15× worse than Level 1 |
+| Latency | p99 | **6 s flat** | Hard ceiling — connections timing out |
+| Latency | p50 | ~1 s | Even the median is unusable |
+| PHP-FPM | Queue depth | **~250** | Catastrophic backlog — workers exhausted |
+| PHP-FPM | Active workers | maxed → dropping | Workers timing out under load |
+| MariaDB | Threads running | **20** (max) | Every PHP request holding a DB connection |
 
 <br>
-
-<div class="cols">
-<div>
-
-**Virtual Users & requests/s chart — top left:**
-- Blue Virtual Users line climbs to **500**
-- Green requests/s line peaks ~140 then **collapses** — the server buckles
-- At the screenshot moment: only 24.5 requests/s from 500 Virtual Users = **83% of requests failing or queued**
-
-**Latency chart — bottom left:**
-- p99 (red): **flat line at 6 seconds** from the first minute
-- p95 (orange): ~3 seconds — 15× worse than Level 1
-- p50 (green): ~1 second — even the median is unusable
-
-</div>
-<div>
-
-**FPM Workers — top right:**
-- Queue Depth (red): spiked to **~250** ← catastrophic backlog
-- Active Workers: maxed out, then started dropping as workers timed out
-
-**MariaDB — bottom right:**
-- Threads Running spiked to **20** and stayed there
-- Connection queue fully saturated
-- Every PHP request holding a DB connection waiting on I/O
 
 > **The crash is visible in one chart:**
 > Green requests/s goes up, then down, while Blue Virtual Users keep climbing.
 > The server is no longer responding to more load — only less.
-
-</div>
-</div>
 
 ---
 

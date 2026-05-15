@@ -54,7 +54,7 @@
       "title": "Commands / sec",
       "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
       "fieldConfig": { "defaults": { "unit": "ops" } },
-      "targets": [{ "datasource": "Prometheus", "expr": "rate(redis_commands_total[30s])", "legendFormat": "cmd/s" }]
+      "targets": [{ "datasource": "Prometheus", "expr": "sum(rate(redis_commands_total[30s]))", "legendFormat": "cmd/s" }]
     },
     {
       "id": 10,
@@ -86,9 +86,9 @@
       "gridPos": { "x": 0, "y": 12, "w": 24, "h": 6 },
       "fieldConfig": { "defaults": { "unit": "ops" } },
       "targets": [
-        { "datasource": "Prometheus", "expr": "rate(redis_commands_total[30s])", "legendFormat": "Redis ops/s (cache hits)" },
+        { "datasource": "Prometheus", "expr": "sum(rate(redis_commands_total[30s]))", "legendFormat": "Redis ops/s (cache hits)" },
         { "datasource": "Prometheus", "expr": "rate(mysql_global_status_queries[30s])", "legendFormat": "MySQL queries/s" },
-        { "datasource": "Prometheus", "expr": "rate(phpfpm_accepted_connections_total[30s])", "legendFormat": "PHP requests/s" }
+        { "datasource": "Prometheus", "expr": "rate(phpfpm_accepted_connections[30s])", "legendFormat": "PHP requests/s" }
       ]
     }
   ],
