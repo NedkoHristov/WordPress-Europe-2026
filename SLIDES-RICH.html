@@ -296,18 +296,7 @@ The crash happens faster and the improvements are more visible.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="7" lang="C">
 <h2 id="observability-stack">Observability stack</h2>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code>k6 ──remote-write──<img class="emoji" draggable="false" alt="▶" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/25b6.svg" data-marp-twemoji=""/> Prometheus <img class="emoji" draggable="false" alt="◀" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/25c0.svg" data-marp-twemoji=""/>── node-exporter  (CPU, RAM, disk)
-                          │       <img class="emoji" draggable="false" alt="◀" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/25c0.svg" data-marp-twemoji=""/>── cadvisor       (container metrics)
-                          │       <img class="emoji" draggable="false" alt="◀" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/25c0.svg" data-marp-twemoji=""/>── mysqld-exporter (threads, buffer pool)
-                          │       <img class="emoji" draggable="false" alt="◀" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/25c0.svg" data-marp-twemoji=""/>── php-fpm-exporter (workers, queue)
-                          │       <img class="emoji" draggable="false" alt="◀" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/25c0.svg" data-marp-twemoji=""/>── nginx-exporter  (connections, requests/s)
-                          │       <img class="emoji" draggable="false" alt="◀" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/25c0.svg" data-marp-twemoji=""/>── redis-exporter  (hit rate, memory)
-                          ▼
-                       Grafana  ←── Loki (container logs)
-                    7 dashboards
-                    (live during demo)
-</code></pre>
-<br />
+<p><img src="diagrams/observability-stack.png" alt="" style="width:900px;" /></p>
 <blockquote>
 <p>Every number you see on screen is a <strong>real metric from a real process.</strong><br />
 No synthetic benchmarks. No cherry-picked results.</p>
@@ -320,21 +309,7 @@ No synthetic benchmarks. No cherry-picked results.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="9" lang="C">
 <h2 id="level-0--how-apache-prefork-works">Level 0 — How Apache prefork works</h2>
-<p><strong>Each connection = one OS process</strong></p>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code>Browser connects
-  → Apache forks a worker process
-    → worker loads PHP + WordPress into RAM
-      → PHP runs, queries MySQL
-        → response sent
-          → worker stays alive, waiting
-            (idle, ~32 MB RAM held)
-</code></pre>
-<p><strong>The problem:</strong></p>
-<ul>
-<li>60 idle workers = 1.9 GB RAM consumed</li>
-<li>Browser #61 gets: queue</li>
-<li>Browser #200 gets: <strong>503</strong></li>
-</ul>
+<p><img src="diagrams/apache-prefork.png" alt="" style="width:900px;" /></p>
 <blockquote>
 <p>The process model was designed for static files in 1996.<br />
 WordPress averages <strong>300+ database queries per page.</strong></p>
@@ -630,19 +605,7 @@ But every request still hits PHP and MySQL — there is room to go further.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="22" lang="C">
 <h2 id="level-1--what-redis-is-actually-doing">Level 1 — what Redis is actually doing</h2>
-<p><strong>46,000 cached keys · 14.5 MB · 6,000 ops/s at peak</strong></p>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code>WordPress makes 300+ DB calls per page request.
-Redis intercepts most of them:
-
-wp_get_option('siteurl')        → Redis HIT → 0.1 ms
-wp_get_option('blogname')       → Redis HIT → 0.1 ms
-WP_Query (recent posts)         → Redis HIT → 0.1 ms
-get_post_meta(post_id, '_price')→ Redis HIT → 0.1 ms
-WC product lookup               → Redis MISS → MySQL → 4 ms → cached
-
-After warmup: ~82% of DB calls answered from memory.
-MySQL sees ~54 queries/request instead of 300+.
-</code></pre>
+<p><img src="diagrams/redis-flow.png" alt="" style="width:900px;" /></p>
 <blockquote>
 <p>Redis did not prevent the crash at Level 0 because we never got there.<br />
 It <strong>would</strong> delay the crash significantly — but doesn't eliminate it.<br />
@@ -976,14 +939,7 @@ wp simply-static run
 Run once after seeding 2,500 posts + 500 products. Re-run after any publish.<br />
 Takes ~2–5 min. Output directory is the same <code>static/export/</code> Nginx already serves.</p>
 </blockquote>
-<p><strong>Runtime</strong> (every anonymous request):</p>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code>Browser → Nginx
-  ├── /           → static/export/index.html   (0ms PHP)
-  ├── /post-2498/ → static/export/post-2498/index.html   (0ms PHP)
-  └── /checkout   → proxy → WordPress (live)
-     /wp-admin    → proxy → WordPress (live)
-     /wp-json/*   → proxy → WordPress (live)
-</code></pre>
+<p><img src="diagrams/simply-static-routing.png" alt="" style="width:900px;" /></p>
 <p><strong>WordPress only activates for cart / checkout / admin.</strong><br />
 Everything else is a static file served by Nginx from disk.</p>
 </section>
@@ -1044,56 +1000,7 @@ Use Level 2 for: live inventory, personalised pages, real-time data.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="37" lang="C">
 <h2 id="level-3--cloudflare-cdn">Level 3 — Cloudflare CDN</h2>
-<p><strong>The concept:</strong></p>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code>Browser (anywhere in the world)
-  ↓
-Cloudflare Edge (300+ PoPs — nearest data center, &lt;30ms away)
-  ├── CACHE HIT  → response from edge   (0ms origin, ~10–20ms to browser)
-  └── CACHE MISS → fetch from your VPS  (once per TTL, then cached at edge)
-</code></pre>
-<p>Your $12 VPS <strong>only sees cache misses</strong> — ~10–20% of total traffic during a spike.</p>
-<table>
-<thead>
-<tr>
-<th>Metric</th>
-<th>Level 2 (direct)</th>
-<th>Level 3 (+ Cloudflare)</th>
-<th>Δ</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>TTFB for cached pages</td>
-<td>79 ms</td>
-<td><strong>10–20 ms</strong></td>
-<td>−75%</td>
-</tr>
-<tr>
-<td>Origin requests at peak</td>
-<td>100%</td>
-<td><strong>~15–20%</strong></td>
-<td><strong>−80%</strong></td>
-</tr>
-<tr>
-<td>Bandwidth from VPS</td>
-<td>100%</td>
-<td><strong>~20–30%</strong></td>
-<td>−75%</td>
-</tr>
-<tr>
-<td>DDoS protection</td>
-<td><img class="emoji" draggable="false" alt="❌" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/274c.svg" data-marp-twemoji=""/> none</td>
-<td><strong><img class="emoji" draggable="false" alt="✅" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2705.svg" data-marp-twemoji=""/> unlimited</strong></td>
-<td>—</td>
-</tr>
-<tr>
-<td>Cost</td>
-<td>$0</td>
-<td><strong>$0</strong></td>
-<td>—</td>
-</tr>
-</tbody>
-</table>
+<p><img src="diagrams/cloudflare-flow.png" alt="" style="width:900px;" /></p>
 <blockquote>
 <p>Level 3 turns your $12 VPS into a globally distributed site.<br />
 The VPS becomes the <strong>origin</strong> — it only handles 10–20% of peak load.<br />
@@ -1200,22 +1107,7 @@ It was configuration, architecture, and understanding the bottleneck.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="40" lang="C">
 <h2 id="the-full-cache-hierarchy">The full cache hierarchy</h2>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code>Request from browser
-  │
-  ▼
-[Cloudflare CDN]  ← Level 3 (edge cache, global PoP)
-  │ miss
-  ▼
-[Nginx FastCGI Cache]  ← Level 2 (disk cache, 60-min TTL)
-  │ miss
-  ▼
-[PHP-FPM]  ← always running, pool of 20 workers
-  ├── [OPcache]  ← Level 1 (compiled bytecode in RAM)
-  └── [Redis Object Cache]  ← Level 1 (DB query results in RAM)
-       │ miss (first time only)
-       ▼
-    [MariaDB]  ← tuned at Level 2: 512MB buffer pool
-</code></pre>
+<p><img src="diagrams/cache-hierarchy.png" alt="" style="width:740px;" /></p>
 <blockquote>
 <p>Each layer absorbed ~70–95% of what reached it.<br />
 MariaDB only sees the requests Redis couldn't answer.</p>

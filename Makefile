@@ -242,8 +242,14 @@ screenshot:
 # Regenerate all presentation exports from SLIDES-RICH.md
 # Requires: npx marp-cli, Playwright Chromium, LibreOffice
 CHROME ?= /home/nedko/.cache/ms-playwright/chromium-1223/chrome-linux64/chrome
+.PHONY: diagrams
+diagrams:
+	@echo "$(YELLOW)▶ Exporting Excalidraw diagrams to PNG$(RESET)"
+	CHROME_PATH=$(CHROME) node scripts/export-diagrams.js
+	@echo "$(GREEN)✓ Diagrams exported$(RESET)"
+
 .PHONY: slides
-slides:
+slides: diagrams
 	@echo "$(YELLOW)▶ Generating SLIDES-RICH.html$(RESET)"
 	npx @marp-team/marp-cli SLIDES-RICH.md --allow-local-files --html --output SLIDES-RICH.html
 	@echo "$(YELLOW)▶ Generating SLIDES-RICH.pdf$(RESET)"

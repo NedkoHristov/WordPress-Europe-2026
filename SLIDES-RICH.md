@@ -935,6 +935,10 @@ Your $12 VPS **only sees cache misses** — ~10–20% of total traffic during a 
 > The VPS becomes the **origin** — it only handles 10–20% of peak load.
 > No code changes. DNS cutover is the entire "deployment".
 
+> Level 3 turns your $12 VPS into a globally distributed site.
+> The VPS becomes the **origin** — it only handles 10–20% of peak load.
+> No code changes. DNS cutover is the entire "deployment".
+
 ---
 
 ## Cloudflare Free Plan — what you get

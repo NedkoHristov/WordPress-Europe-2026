@@ -1,0 +1,77 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://excalidraw.com",
+  "elements": [
+    { "id": "title", "type": "text", "x": 40, "y": 14, "width": 740, "height": 28,
+      "text": "Level 3 — Cloudflare CDN: Your VPS Sees Only Cache Misses", "fontSize": 19, "fontFamily": 1, "textAlign": "center", "strokeColor": "#1971c2", "fontStyle": 1 },
+
+    { "id": "box-browser", "type": "rectangle", "x": 40, "y": 60, "width": 120, "height": 50,
+      "strokeColor": "#1971c2", "backgroundColor": "#d0ebff", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3} },
+    { "id": "lbl-browser", "type": "text", "x": 46, "y": 72, "width": 108, "height": 26,
+      "text": "🌐 Browser\n(anywhere)", "fontSize": 13, "fontFamily": 1, "textAlign": "center" },
+
+    { "id": "arr-b-cf", "type": "arrow", "x": 162, "y": 85, "width": 98, "height": 0,
+      "strokeColor": "#1971c2", "roughness": 1, "strokeWidth": 2, "startArrowhead": null, "endArrowhead": "arrow" },
+    { "id": "lbl-b-cf", "type": "text", "x": 168, "y": 68, "width": 86, "height": 14,
+      "text": "any request", "fontSize": 11, "fontFamily": 2, "strokeColor": "#1971c2", "textAlign": "center" },
+
+    { "id": "box-cf", "type": "rectangle", "x": 262, "y": 48, "width": 200, "height": 76,
+      "strokeColor": "#f08c00", "backgroundColor": "#fff3bf", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3} },
+    { "id": "lbl-cf-title", "type": "text", "x": 268, "y": 56, "width": 188, "height": 20,
+      "text": "☁️ Cloudflare Edge", "fontSize": 14, "fontFamily": 1, "textAlign": "center", "fontStyle": 1 },
+    { "id": "lbl-cf-desc", "type": "text", "x": 268, "y": 78, "width": 188, "height": 38,
+      "text": "300+ PoPs worldwide\n<30ms to any browser", "fontSize": 12, "fontFamily": 1, "textAlign": "center" },
+
+    { "id": "arr-cf-hit", "type": "arrow", "x": 262, "y": 70, "width": -60, "height": -30,
+      "strokeColor": "#2f9e44", "roughness": 1, "strokeWidth": 2, "startArrowhead": null, "endArrowhead": "arrow" },
+    { "id": "box-hit", "type": "rectangle", "x": 140, "y": 20, "width": 120, "height": 38,
+      "strokeColor": "#2f9e44", "backgroundColor": "#d3f9d8", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3} },
+    { "id": "lbl-hit", "type": "text", "x": 146, "y": 28, "width": 108, "height": 22,
+      "text": "✅ CACHE HIT\n10–20ms TTFB", "fontSize": 11, "fontFamily": 1, "textAlign": "center", "strokeColor": "#2f9e44" },
+
+    { "id": "arr-cf-miss", "type": "arrow", "x": 464, "y": 85, "width": 96, "height": 0,
+      "strokeColor": "#c92a2a", "roughness": 1, "strokeWidth": 2, "startArrowhead": null, "endArrowhead": "arrow", "strokeStyle": "dashed" },
+    { "id": "lbl-miss", "type": "text", "x": 470, "y": 68, "width": 84, "height": 14,
+      "text": "MISS (10–20%)", "fontSize": 11, "fontFamily": 2, "strokeColor": "#c92a2a", "textAlign": "center" },
+
+    { "id": "box-vps", "type": "rectangle", "x": 562, "y": 48, "width": 180, "height": 76,
+      "strokeColor": "#7950f2", "backgroundColor": "#f3d9fa", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3} },
+    { "id": "lbl-vps-title", "type": "text", "x": 568, "y": 56, "width": 168, "height": 20,
+      "text": "💻 Your $12 VPS", "fontSize": 14, "fontFamily": 1, "textAlign": "center", "fontStyle": 1 },
+    { "id": "lbl-vps-desc", "type": "text", "x": 568, "y": 78, "width": 168, "height": 38,
+      "text": "Level 2 stack\nonly handles misses", "fontSize": 12, "fontFamily": 1, "textAlign": "center" },
+
+    { "id": "arr-vps-cf", "type": "arrow", "x": 560, "y": 100, "width": -94, "height": 0,
+      "strokeColor": "#7950f2", "roughness": 1, "strokeWidth": 1, "strokeStyle": "dashed", "startArrowhead": null, "endArrowhead": "arrow" },
+    { "id": "lbl-vps-cf", "type": "text", "x": 470, "y": 104, "width": 84, "height": 14,
+      "text": "response", "fontSize": 11, "fontFamily": 2, "strokeColor": "#7950f2", "textAlign": "center" },
+
+    { "id": "divider", "type": "line", "x": 40, "y": 148, "width": 702, "height": 0,
+      "strokeColor": "#ced4da", "roughness": 0, "strokeStyle": "dashed" },
+
+    { "id": "lbl-stats-title", "type": "text", "x": 40, "y": 162, "width": 702, "height": 20,
+      "text": "Impact at peak traffic:", "fontSize": 13, "fontFamily": 1, "strokeColor": "#495057", "fontStyle": 1 },
+
+    { "id": "box-s1", "type": "rectangle", "x": 40, "y": 188, "width": 160, "height": 56,
+      "strokeColor": "#2f9e44", "backgroundColor": "#d3f9d8", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3} },
+    { "id": "lbl-s1", "type": "text", "x": 46, "y": 196, "width": 148, "height": 40,
+      "text": "TTFB\n79ms → 10–20ms\n−75%", "fontSize": 12, "fontFamily": 1, "textAlign": "center", "strokeColor": "#2f9e44" },
+
+    { "id": "box-s2", "type": "rectangle", "x": 216, "y": 188, "width": 160, "height": 56,
+      "strokeColor": "#2f9e44", "backgroundColor": "#d3f9d8", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3} },
+    { "id": "lbl-s2", "type": "text", "x": 222, "y": 196, "width": 148, "height": 40,
+      "text": "Origin requests\n100% → ~15–20%\n−80%", "fontSize": 12, "fontFamily": 1, "textAlign": "center", "strokeColor": "#2f9e44" },
+
+    { "id": "box-s3", "type": "rectangle", "x": 392, "y": 188, "width": 160, "height": 56,
+      "strokeColor": "#2f9e44", "backgroundColor": "#d3f9d8", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3} },
+    { "id": "lbl-s3", "type": "text", "x": 398, "y": 196, "width": 148, "height": 40,
+      "text": "DDoS protection\nnone → unlimited\n$0 extra", "fontSize": 12, "fontFamily": 1, "textAlign": "center", "strokeColor": "#2f9e44" },
+
+    { "id": "box-s4", "type": "rectangle", "x": 568, "y": 188, "width": 174, "height": 56,
+      "strokeColor": "#2f9e44", "backgroundColor": "#d3f9d8", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3} },
+    { "id": "lbl-s4", "type": "text", "x": 574, "y": 196, "width": 162, "height": 40,
+      "text": "Deployment\nDNS cutover only\nzero code changes", "fontSize": 12, "fontFamily": 1, "textAlign": "center", "strokeColor": "#2f9e44" }
+  ],
+  "appState": { "viewBackgroundColor": "#ffffff" }
+}

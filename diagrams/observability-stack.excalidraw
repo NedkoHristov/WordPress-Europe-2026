@@ -1,0 +1,124 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://excalidraw.com",
+  "elements": [
+
+    { "id": "title", "type": "text", "x": 40, "y": 20, "width": 860, "height": 32,
+      "text": "Observability Stack — WordPress Europe 2026", "fontSize": 22, "fontFamily": 1, "textAlign": "center", "strokeColor": "#1971c2" },
+
+    { "id": "subtitle", "type": "text", "x": 40, "y": 56, "width": 860, "height": 20,
+      "text": "Every number on screen is a real metric from a real process. No synthetic benchmarks.", "fontSize": 13, "fontFamily": 1, "textAlign": "center", "strokeColor": "#868e96" },
+
+    { "id": "grp-load", "type": "text", "x": 30, "y": 96, "width": 140, "height": 18,
+      "text": "LOAD GENERATOR", "fontSize": 11, "fontFamily": 1, "strokeColor": "#e03131", "fontStyle": 1 },
+
+    { "id": "box-k6", "type": "rectangle", "x": 30, "y": 116, "width": 140, "height": 56,
+      "strokeColor": "#e03131", "backgroundColor": "#ffe3e3", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3} },
+    { "id": "lbl-k6", "type": "text", "x": 36, "y": 126, "width": 128, "height": 36,
+      "text": "k6\nramp: 10→50 VU", "fontSize": 14, "fontFamily": 1, "textAlign": "center" },
+
+    { "id": "arr-k6-prom", "type": "arrow", "x": 172, "y": 144, "width": 128, "height": 0,
+      "strokeColor": "#e03131", "roughness": 1, "strokeWidth": 2 },
+    { "id": "lbl-k6-prom", "type": "text", "x": 178, "y": 128, "width": 116, "height": 14,
+      "text": "remote-write", "fontSize": 11, "fontFamily": 2, "strokeColor": "#e03131", "textAlign": "center" },
+
+    { "id": "grp-prom", "type": "text", "x": 316, "y": 96, "width": 160, "height": 18,
+      "text": "METRICS STORE", "fontSize": 11, "fontFamily": 1, "strokeColor": "#1971c2", "fontStyle": 1 },
+
+    { "id": "box-prom", "type": "rectangle", "x": 316, "y": 116, "width": 160, "height": 56,
+      "strokeColor": "#1971c2", "backgroundColor": "#d0ebff", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3} },
+    { "id": "lbl-prom", "type": "text", "x": 322, "y": 126, "width": 148, "height": 36,
+      "text": "Prometheus\nscrape interval: 15s", "fontSize": 14, "fontFamily": 1, "textAlign": "center" },
+
+    { "id": "arr-prom-graf", "type": "arrow", "x": 396, "y": 174, "width": 0, "height": 136,
+      "strokeColor": "#1971c2", "roughness": 1, "strokeWidth": 2 },
+
+    { "id": "grp-exporters", "type": "text", "x": 556, "y": 96, "width": 310, "height": 18,
+      "text": "EXPORTERS (scraped by Prometheus)", "fontSize": 11, "fontFamily": 1, "strokeColor": "#2f9e44", "fontStyle": 1 },
+
+    { "id": "box-node", "type": "rectangle", "x": 556, "y": 116, "width": 310, "height": 38,
+      "strokeColor": "#2f9e44", "backgroundColor": "#d3f9d8", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3} },
+    { "id": "lbl-node", "type": "text", "x": 562, "y": 126, "width": 298, "height": 18,
+      "text": "node-exporter  —  CPU · RAM · disk · network", "fontSize": 13, "fontFamily": 1 },
+
+    { "id": "box-cadv", "type": "rectangle", "x": 556, "y": 164, "width": 310, "height": 38,
+      "strokeColor": "#2f9e44", "backgroundColor": "#d3f9d8", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3} },
+    { "id": "lbl-cadv", "type": "text", "x": 562, "y": 174, "width": 298, "height": 18,
+      "text": "cadvisor  —  container CPU · RAM · I/O", "fontSize": 13, "fontFamily": 1 },
+
+    { "id": "box-mysql", "type": "rectangle", "x": 556, "y": 212, "width": 310, "height": 38,
+      "strokeColor": "#2f9e44", "backgroundColor": "#d3f9d8", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3} },
+    { "id": "lbl-mysql", "type": "text", "x": 562, "y": 222, "width": 298, "height": 18,
+      "text": "mysqld-exporter  —  threads · buffer pool · QPS", "fontSize": 13, "fontFamily": 1 },
+
+    { "id": "box-fpm", "type": "rectangle", "x": 556, "y": 260, "width": 310, "height": 38,
+      "strokeColor": "#2f9e44", "backgroundColor": "#d3f9d8", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3} },
+    { "id": "lbl-fpm", "type": "text", "x": 562, "y": 270, "width": 298, "height": 18,
+      "text": "php-fpm-exporter  —  workers · queue depth", "fontSize": 13, "fontFamily": 1 },
+
+    { "id": "box-nginx", "type": "rectangle", "x": 556, "y": 308, "width": 310, "height": 38,
+      "strokeColor": "#2f9e44", "backgroundColor": "#d3f9d8", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3} },
+    { "id": "lbl-nginx", "type": "text", "x": 562, "y": 318, "width": 298, "height": 18,
+      "text": "nginx-exporter  —  connections · requests/s · cache", "fontSize": 13, "fontFamily": 1 },
+
+    { "id": "box-redis", "type": "rectangle", "x": 556, "y": 356, "width": 310, "height": 38,
+      "strokeColor": "#2f9e44", "backgroundColor": "#d3f9d8", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3} },
+    { "id": "lbl-redis", "type": "text", "x": 562, "y": 366, "width": 298, "height": 18,
+      "text": "redis-exporter  —  hit rate · memory · ops/s", "fontSize": 13, "fontFamily": 1 },
+
+    { "id": "arr-exp-node",  "type": "arrow", "x": 554, "y": 135, "width": -78, "height": 0,
+      "strokeColor": "#2f9e44", "roughness": 1, "strokeWidth": 1 },
+    { "id": "arr-exp-cadv",  "type": "arrow", "x": 554, "y": 183, "width": -78, "height": -39,
+      "strokeColor": "#2f9e44", "roughness": 1, "strokeWidth": 1 },
+    { "id": "arr-exp-mysql", "type": "arrow", "x": 554, "y": 231, "width": -78, "height": -87,
+      "strokeColor": "#2f9e44", "roughness": 1, "strokeWidth": 1 },
+    { "id": "arr-exp-fpm",   "type": "arrow", "x": 554, "y": 279, "width": -78, "height": -135,
+      "strokeColor": "#2f9e44", "roughness": 1, "strokeWidth": 1 },
+    { "id": "arr-exp-nginx", "type": "arrow", "x": 554, "y": 327, "width": -78, "height": -183,
+      "strokeColor": "#2f9e44", "roughness": 1, "strokeWidth": 1 },
+    { "id": "arr-exp-redis", "type": "arrow", "x": 554, "y": 375, "width": -78, "height": -231,
+      "strokeColor": "#2f9e44", "roughness": 1, "strokeWidth": 1 },
+
+    { "id": "grp-viz", "type": "text", "x": 220, "y": 322, "width": 340, "height": 18,
+      "text": "VISUALISATION", "fontSize": 11, "fontFamily": 1, "strokeColor": "#f08c00", "fontStyle": 1 },
+
+    { "id": "box-graf", "type": "rectangle", "x": 220, "y": 342, "width": 180, "height": 70,
+      "strokeColor": "#f08c00", "backgroundColor": "#fff3bf", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3} },
+    { "id": "lbl-graf", "type": "text", "x": 226, "y": 352, "width": 168, "height": 50,
+      "text": "Grafana\n7 dashboards\nauto-provisioned", "fontSize": 14, "fontFamily": 1, "textAlign": "center" },
+
+    { "id": "grp-logs", "type": "text", "x": 30, "y": 322, "width": 160, "height": 18,
+      "text": "LOG PIPELINE", "fontSize": 11, "fontFamily": 1, "strokeColor": "#7950f2", "fontStyle": 1 },
+
+    { "id": "box-promtail", "type": "rectangle", "x": 30, "y": 342, "width": 150, "height": 38,
+      "strokeColor": "#7950f2", "backgroundColor": "#f3d9fa", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3} },
+    { "id": "lbl-promtail", "type": "text", "x": 36, "y": 352, "width": 138, "height": 18,
+      "text": "Promtail (log tail)", "fontSize": 13, "fontFamily": 1, "textAlign": "center" },
+
+    { "id": "box-loki", "type": "rectangle", "x": 30, "y": 400, "width": 150, "height": 38,
+      "strokeColor": "#7950f2", "backgroundColor": "#f3d9fa", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3} },
+    { "id": "lbl-loki", "type": "text", "x": 36, "y": 410, "width": 138, "height": 18,
+      "text": "Loki (log store)", "fontSize": 13, "fontFamily": 1, "textAlign": "center" },
+
+    { "id": "arr-promtail-loki", "type": "arrow", "x": 105, "y": 382, "width": 0, "height": 16,
+      "strokeColor": "#7950f2", "roughness": 1, "strokeWidth": 2 },
+
+    { "id": "arr-loki-graf", "type": "arrow", "x": 182, "y": 419, "width": 36, "height": 0,
+      "strokeColor": "#7950f2", "roughness": 1, "strokeWidth": 2 },
+    { "id": "lbl-loki-graf", "type": "text", "x": 184, "y": 405, "width": 34, "height": 14,
+      "text": "logs", "fontSize": 11, "fontFamily": 2, "strokeColor": "#7950f2", "textAlign": "center" },
+
+    { "id": "box-wp", "type": "rectangle", "x": 30, "y": 474, "width": 830, "height": 40,
+      "strokeColor": "#495057", "backgroundColor": "#f1f3f5", "fillStyle": "solid", "roughness": 1, "roundness": {"type": 3} },
+    { "id": "lbl-wp", "type": "text", "x": 36, "y": 484, "width": 818, "height": 20,
+      "text": "Docker Compose stack:  WordPress · PHP-FPM · Nginx · MariaDB · Redis  (all containers emit logs → Promtail, metrics → exporters)", "fontSize": 12, "fontFamily": 1, "textAlign": "center", "strokeColor": "#495057" },
+
+    { "id": "arr-wp-promtail", "type": "arrow", "x": 105, "y": 472, "width": 0, "height": -32,
+      "strokeColor": "#495057", "roughness": 1, "strokeWidth": 1 },
+    { "id": "arr-wp-exporters", "type": "arrow", "x": 711, "y": 472, "width": 0, "height": -70,
+      "strokeColor": "#2f9e44", "roughness": 1, "strokeWidth": 1 }
+
+  ],
+  "appState": { "viewBackgroundColor": "#ffffff" }
+}
