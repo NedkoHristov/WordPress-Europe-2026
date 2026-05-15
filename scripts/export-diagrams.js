@@ -55,9 +55,13 @@ const RENDER_HTML = `<!DOCTYPE html>
       try {
         const blob = await ExcalidrawLib.exportToBlob({
           elements,
-          appState: { ...appState, exportBackground: true, exportWithDarkMode: false },
+          appState: {
+            ...appState,
+            exportBackground: false,
+            exportWithDarkMode: false,
+          },
           files: null,
-          getDimensions: () => ({ width: 1200, height: 700, scale: 2 }),
+          // No getDimensions — Excalidraw computes natural bounding box automatically
         });
         const buf = await blob.arrayBuffer();
         window.__pngBytes = Array.from(new Uint8Array(buf));

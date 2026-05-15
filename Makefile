@@ -244,6 +244,8 @@ screenshot:
 CHROME ?= /home/nedko/.cache/ms-playwright/chromium-1223/chrome-linux64/chrome
 .PHONY: diagrams
 diagrams:
+	@echo "$(YELLOW)▶ Normalizing Excalidraw files$(RESET)"
+	node scripts/normalize-diagrams.js
 	@echo "$(YELLOW)▶ Exporting Excalidraw diagrams to PNG$(RESET)"
 	CHROME_PATH=$(CHROME) node scripts/export-diagrams.js
 	@echo "$(GREEN)✓ Diagrams exported$(RESET)"
@@ -252,6 +254,7 @@ diagrams:
 slides: diagrams
 	@echo "$(YELLOW)▶ Generating SLIDES-RICH.html$(RESET)"
 	npx @marp-team/marp-cli SLIDES-RICH.md --allow-local-files --html --output SLIDES-RICH.html
+	@sed -i 's|</head>|<style>section{font-size:20.8px!important}</style></head>|' SLIDES-RICH.html
 	@echo "$(YELLOW)▶ Generating SLIDES-RICH.pdf$(RESET)"
 	CHROME_PATH=$(CHROME) npx @marp-team/marp-cli SLIDES-RICH.md --allow-local-files --pdf --output SLIDES-RICH.pdf
 	@echo "$(YELLOW)▶ Generating SLIDES-RICH.pptx$(RESET)"
