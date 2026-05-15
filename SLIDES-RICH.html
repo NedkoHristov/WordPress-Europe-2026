@@ -376,10 +376,14 @@ The &quot;crash&quot; happens at a completely predictable, calculable virtual us
 </blockquote>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="11" data-class="screenshot" lang="C" class="screenshot" style="--class:screenshot;">
+<h2 id="%F0%9F%93%B8-level-0--baseline-50-virtual-users--before-the-storm"><img class="emoji" draggable="false" alt="📸" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4f8.svg" data-marp-twemoji=""/> Level 0 — Baseline (50 Virtual Users — before the storm)</h2>
+<p><img src="screenshots/l0-00-demo.png" alt="" style="width:1060px;" /></p>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="12" data-class="screenshot" lang="C" class="screenshot" style="--class:screenshot;">
 <h2 id="%F0%9F%93%B8-level-0--the-crash-black-friday-ramp-0-%E2%86%92-500-virtual-users"><img class="emoji" draggable="false" alt="📸" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4f8.svg" data-marp-twemoji=""/> Level 0 — The Crash (Black Friday ramp: 0 → 500 Virtual Users)</h2>
 <p><img src="screenshots/l0-crash-00-demo.png" alt="" style="width:1060px;" /></p>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="12" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="13" lang="C">
 <h2 id="level-0--reading-the-crash">Level 0 — reading the crash</h2>
 <table>
 <thead>
@@ -448,12 +452,12 @@ Green requests/s goes up, then down, while Blue Virtual Users keep climbing.<br 
 The server is no longer responding to more load — only less.</p>
 </blockquote>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="13" data-class="act" lang="C" class="act" style="--class:act;"><div class="act-icon">🩹</div>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="14" data-class="act" lang="C" class="act" style="--class:act;"><div class="act-icon">🩹</div>
 <h1 id="act-ii">ACT II</h1>
 <h2 id="stop-the-bleeding">Stop the Bleeding</h2>
 <h3 id="level-1--nginx--php-fpm--opcache--redis">Level 1 — Nginx + PHP-FPM + OPcache + Redis</h3>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="14" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="15" lang="C">
 <h2 id="level-1--three-changes-zero-cost">Level 1 — Three changes, zero cost</h2>
 <p><strong>1. Nginx (event-driven)</strong><br />
 One thread, 10,000+ concurrent connections.<br />
@@ -471,7 +475,7 @@ Nginx queues connections externally.<br />
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-bash">make level-1   <span class="hljs-comment"># 10 seconds to switch</span>
 </code></pre>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="15" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="16" lang="C">
 <h2 id="opcache--the-biggest-free-win">OPcache — the biggest free win</h2>
 <div class="cols">
 <div class="card">
@@ -506,11 +510,11 @@ Zero disk. Zero compilation.
 <span class="hljs-attr">opcache.memory_consumption</span> = <span class="hljs-number">256</span>  <span class="hljs-comment">; MB</span>
 </code></pre>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="16" data-class="screenshot" lang="C" class="screenshot" style="--class:screenshot;">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="17" data-class="screenshot" lang="C" class="screenshot" style="--class:screenshot;">
 <h2 id="%F0%9F%93%B8-level-1--demo-dashboard-50-virtual-users"><img class="emoji" draggable="false" alt="📸" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4f8.svg" data-marp-twemoji=""/> Level 1 — Demo Dashboard (50 Virtual Users)</h2>
 <p><img src="screenshots/l1-00-demo.png" alt="" style="width:1060px;" /></p>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="17" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="18" lang="C">
 <h2 id="level-1--reading-the-dashboard">Level 1 — reading the dashboard</h2>
 <div class="cols3">
 <div class="metric metric-blue"><div class="num">50</div><div class="lbl">Peak Virtual Users</div></div>
@@ -548,7 +552,7 @@ Zero disk. Zero compilation.
 </div>
 </div>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="18" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="19" lang="C">
 <h2 id="l0-%E2%86%92-l1-the-jump">L0 → L1: the jump</h2>
 <table>
 <thead>
@@ -616,15 +620,15 @@ Zero disk. Zero compilation.
 But every request still hits PHP and MySQL — there is room to go further.</p>
 </blockquote>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="19" data-class="screenshot" lang="C" class="screenshot" style="--class:screenshot;">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="20" data-class="screenshot" lang="C" class="screenshot" style="--class:screenshot;">
 <h2 id="%F0%9F%93%B8-level-1--php-fpm-workers--request-rate"><img class="emoji" draggable="false" alt="📸" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4f8.svg" data-marp-twemoji=""/> Level 1 — PHP-FPM Workers &amp; Request Rate</h2>
 <p><img src="screenshots/l1-02-php-fpm.png" alt="" style="width:1060px;" /></p>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="20" data-class="screenshot" lang="C" class="screenshot" style="--class:screenshot;">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="21" data-class="screenshot" lang="C" class="screenshot" style="--class:screenshot;">
 <h2 id="%F0%9F%93%B8-level-1--redis-82-hit-rate-6k-opss"><img class="emoji" draggable="false" alt="📸" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4f8.svg" data-marp-twemoji=""/> Level 1 — Redis: 82% Hit Rate, 6K ops/s</h2>
 <p><img src="screenshots/l1-05-redis.png" alt="" style="width:1060px;" /></p>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="21" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="22" lang="C">
 <h2 id="level-1--what-redis-is-actually-doing">Level 1 — what Redis is actually doing</h2>
 <p><strong>46,000 cached keys · 14.5 MB · 6,000 ops/s at peak</strong></p>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code>WordPress makes 300+ DB calls per page request.
@@ -645,12 +649,12 @@ It <strong>would</strong> delay the crash significantly — but doesn't eliminat
 That requires removing PHP from the hot path entirely.</p>
 </blockquote>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="22" data-class="act" lang="C" class="act" style="--class:act;"><div class="act-icon">🚀</div>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="23" data-class="act" lang="C" class="act" style="--class:act;"><div class="act-icon">🚀</div>
 <h1 id="act-iii">ACT III</h1>
 <h2 id="cache-everything">Cache Everything</h2>
 <h3 id="level-2--fastcgi-page-cache--mariadb-tuning">Level 2 — FastCGI page cache + MariaDB tuning</h3>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="23" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="24" lang="C">
 <h2 id="the-key-insight">The key insight</h2>
 <blockquote>
 <p><strong>Most WordPress page requests return identical HTML for every anonymous visitor.</strong><br />
@@ -676,7 +680,7 @@ Logged-in · Cart · Checkout · Admin</p>
 </div>
 </div>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="24" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="25" lang="C">
 <h2 id="level-2--nginx-config">Level 2 — nginx config</h2>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-nginx"><span class="hljs-attribute">fastcgi_cache_path</span> /var/cache/nginx
   levels=<span class="hljs-number">1</span>:<span class="hljs-number">2</span>
@@ -702,11 +706,11 @@ Logged-in · Cart · Checkout · Admin</p>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-bash">make level-2   <span class="hljs-comment"># 10 seconds to switch. Same hardware.</span>
 </code></pre>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="25" data-class="screenshot" lang="C" class="screenshot" style="--class:screenshot;">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="26" data-class="screenshot" lang="C" class="screenshot" style="--class:screenshot;">
 <h2 id="%F0%9F%93%B8-level-2--demo-dashboard-50-virtual-users"><img class="emoji" draggable="false" alt="📸" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4f8.svg" data-marp-twemoji=""/> Level 2 — Demo Dashboard (50 Virtual Users)</h2>
 <p><img src="screenshots/l2-00-demo.png" alt="" style="width:1060px;" /></p>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="26" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="27" lang="C">
 <h2 id="level-2--reading-the-dashboard">Level 2 — reading the dashboard</h2>
 <div class="cols3">
 <div class="metric metric-green"><div class="num">70</div><div class="lbl">Peak requests/s (+8%)</div></div>
@@ -740,7 +744,7 @@ Logged-in · Cart · Checkout · Admin</p>
 </div>
 </div>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="27" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="28" lang="C">
 <h2 id="l0-%E2%86%92-l1-%E2%86%92-l2-the-progression">L0 → L1 → L2: the progression</h2>
 <table>
 <thead>
@@ -808,11 +812,11 @@ Logged-in · Cart · Checkout · Admin</p>
 DB threads: 12.5 → <strong>3</strong>. The bottleneck is gone.</p>
 </blockquote>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="28" data-class="screenshot" lang="C" class="screenshot" style="--class:screenshot;">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="29" data-class="screenshot" lang="C" class="screenshot" style="--class:screenshot;">
 <h2 id="%F0%9F%93%B8-level-2--nginx-cache-994k-requests-fpm-offload"><img class="emoji" draggable="false" alt="📸" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4f8.svg" data-marp-twemoji=""/> Level 2 — Nginx Cache: 9.94K requests, FPM Offload</h2>
 <p><img src="screenshots/l2-04-nginx-cache.png" alt="" style="width:1060px;" /></p>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="29" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="30" lang="C">
 <h2 id="level-2--the-fpm-offload-panel-explained">Level 2 — the FPM offload panel explained</h2>
 <p><strong>Bottom-right panel: PHP-FPM Offload — Requests NOT hitting PHP</strong></p>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code>Total requests/s (Nginx)    ████████████████████████  ~70  ← everything
@@ -835,11 +839,11 @@ The gap between the two lines is PHP execution that never happened.<br />
 Scale that to a Black Friday spike — 10× traffic hits nginx, not your server.</p>
 </blockquote>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="30" data-class="screenshot" lang="C" class="screenshot" style="--class:screenshot;">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="31" data-class="screenshot" lang="C" class="screenshot" style="--class:screenshot;">
 <h2 id="%F0%9F%93%B8-level-2--php-fpm-steady-at-10-11-workers"><img class="emoji" draggable="false" alt="📸" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4f8.svg" data-marp-twemoji=""/> Level 2 — PHP-FPM: Steady at 10-11 Workers</h2>
 <p><img src="screenshots/l2-02-php-fpm.png" alt="" style="width:1060px;" /></p>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="31" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="32" lang="C">
 <h2 id="mariadb-tuning--level-2">MariaDB tuning — Level 2</h2>
 <div class="cols">
 <div>
@@ -876,7 +880,7 @@ Scale that to a Black Friday spike — 10× traffic hits nginx, not your server.
 </div>
 </div>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="32" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="33" lang="C">
 <h2 id="level-1-vs-level-2--the-real-numbers">Level 1 vs Level 2 — the real numbers</h2>
 <table>
 <thead>
@@ -951,12 +955,12 @@ never leave nginx. The remaining 30% are served faster too —<br />
 because MariaDB has headroom now.</p>
 </blockquote>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="33" data-class="act" lang="C" class="act" style="--class:act;"><div class="act-icon">⚡</div>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="34" data-class="act" lang="C" class="act" style="--class:act;"><div class="act-icon">⚡</div>
 <h1 id="whats-next">What's Next?</h1>
 <h2 id="the-static-leap">The Static Leap</h2>
 <h3 id="level-4--simply-static-wordpress-as-a-cms-not-a-runtime">Level 4 — Simply Static: WordPress as a CMS, not a runtime</h3>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="34" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="35" lang="C">
 <h2 id="level-4--the-concept">Level 4 — the concept</h2>
 <p><strong>Build time</strong> (once per publish cycle, after content is seeded):</p>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-bash"><span class="hljs-comment"># Setup — install the Simply Static plugin:</span>
@@ -983,7 +987,7 @@ Takes ~2–5 min. Output directory is the same <code>static/export/</code> Nginx
 <p><strong>WordPress only activates for cart / checkout / admin.</strong><br />
 Everything else is a static file served by Nginx from disk.</p>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="35" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="36" lang="C">
 <h2 id="level-4--simply-static-expected-numbers">Level 4 — Simply Static: expected numbers</h2>
 <table>
 <thead>
@@ -1038,7 +1042,7 @@ Perfect for: blogs, marketing sites, WooCommerce catalogues.<br />
 Use Level 2 for: live inventory, personalised pages, real-time data.</p>
 </blockquote>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="36" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="37" lang="C">
 <h2 id="level-3--cloudflare-cdn">Level 3 — Cloudflare CDN</h2>
 <p><strong>The concept:</strong></p>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code>Browser (anywhere in the world)
@@ -1096,7 +1100,7 @@ The VPS becomes the <strong>origin</strong> — it only handles 10–20% of peak
 No code changes. DNS cutover is the entire &quot;deployment&quot;.</p>
 </blockquote>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="37" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="38" lang="C">
 <h2 id="cloudflare-free-plan--what-you-get">Cloudflare Free Plan — what you get</h2>
 <div class="cols">
 <div>
@@ -1137,7 +1141,7 @@ Bypass cookie:  wordpress_logged_in.*|woocommerce_cart.*
 Everything else: served from the nearest Cloudflare PoP. VPS stays idle.</p>
 </blockquote>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="38" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="39" lang="C">
 <h2 id="the-full-picture">The full picture</h2>
 <table>
 <thead>
@@ -1194,7 +1198,7 @@ Everything else: served from the nearest Cloudflare PoP. VPS stays idle.</p>
 It was configuration, architecture, and understanding the bottleneck.</p>
 </blockquote>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="39" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="40" lang="C">
 <h2 id="the-full-cache-hierarchy">The full cache hierarchy</h2>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code>Request from browser
   │
@@ -1217,7 +1221,7 @@ It was configuration, architecture, and understanding the bottleneck.</p>
 MariaDB only sees the requests Redis couldn't answer.</p>
 </blockquote>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="40" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="41" lang="C">
 <h2 id="lessons-learned">Lessons learned</h2>
 <div class="cols">
 <div>
@@ -1259,7 +1263,7 @@ Under-provision → queue → 503.</p>
 </div>
 </div>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="41" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="42" lang="C">
 <h2 id="the-tools--all-free-all-open-source">The tools — all free, all open source</h2>
 <div class="cols">
 <div>
@@ -1331,7 +1335,7 @@ Under-provision → queue → 503.</p>
 <p>Every level. Every screenshot. Every number. Reproducible.</p>
 </div>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="42" data-class="title" lang="C" class="title" style="--class:title;">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="43" data-class="title" lang="C" class="title" style="--class:title;">
 <h1 id="thank-you">Thank you!</h1>
 <br />
 <p><strong>Nedko Hristov</strong><br />

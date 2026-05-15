@@ -369,6 +369,14 @@ $$= \frac{2048 \text{ MB} - 512 \text{ MB}}{32 \text{ MB/worker}} = \textbf{47 w
 
 <!-- _class: screenshot -->
 
+## 📸 Level 0 — Baseline (50 Virtual Users — before the storm)
+
+![w:1060](screenshots/l0-00-demo.png)
+
+---
+
+<!-- _class: screenshot -->
+
 ## 📸 Level 0 — The Crash (Black Friday ramp: 0 → 500 Virtual Users)
 
 ![w:1060](screenshots/l0-crash-00-demo.png)
