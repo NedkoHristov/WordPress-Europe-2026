@@ -78,6 +78,13 @@ background: radial-gradient(ellipse at center, #0f2d0f 0%, #0d1117 70%);<br />
 section.win h1, section.win h2 { color: #51cf66; }</p>
 <p>section.screenshot h2 { font-size: 1.1em; margin-bottom: 0.3em; }<br />
 section.screenshot { padding: 24px 40px; }</p>
+<p>section.dense { padding: 28px 48px; }<br />
+section.dense h2 { font-size: 1.3em; margin-bottom: 0.4em; }<br />
+section.dense .metric { padding: 10px; }<br />
+section.dense .metric .num { font-size: 1.8em; }<br />
+section.dense li { line-height: 1.4; margin-bottom: 0.1em; }<br />
+section.dense p, section.dense li { font-size: 0.9em; }<br />
+section.dense blockquote { margin: 10px 0; }</p>
 <h2 id="%E2%94%80%E2%94%80-metric-boxes-%E2%94%80%E2%94%80-metric--text-align-center-padding-16px-metric-num--font-size-24em-font-weight-900-line-height-1-metric-lbl--font-size-07em-color-8b949e-margin-top-4px-metric-red-num--color-ff6b6b-metric-green-num--color-51cf66-metric-blue-num--color-58a6ff-metric-gold-num--color-ffa657-">/* ── Metric boxes ── */<br />
 .metric { text-align: center; padding: 16px; }<br />
 .metric .num { font-size: 2.4em; font-weight: 900; line-height: 1; }<br />
@@ -349,7 +356,7 @@ WordPress averages <strong>300+ database queries per page.</strong></p>
 <p><img src="screenshots/l0-00-demo.png" alt="" style="width:1060px;" /></p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="12" data-class="screenshot" lang="C" class="screenshot" style="--class:screenshot;">
-<h2 id="%F0%9F%93%B8-level-0--the-crash-black-friday-ramp-0-%E2%86%92-500-virtual-users"><img class="emoji" draggable="false" alt="📸" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4f8.svg" data-marp-twemoji=""/> Level 0 — The Crash (Black Friday ramp: 0 → 500 Virtual Users)</h2>
+<h2 id="%F0%9F%93%B8-level-0--the-crash-black-friday-ramp-0-%E2%86%92-500-vu--apache-dies-at-50"><img class="emoji" draggable="false" alt="📸" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4f8.svg" data-marp-twemoji=""/> Level 0 — The Crash (Black Friday ramp: 0 → 500 VU — Apache dies at ~50)</h2>
 <p><img src="screenshots/l0-crash-00-demo.png" alt="" style="width:1060px;" /></p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="13" lang="C">
@@ -379,19 +386,19 @@ WordPress averages <strong>300+ database queries per page.</strong></p>
 <tr>
 <td>Latency</td>
 <td>p95</td>
-<td><strong>see screenshot</strong></td>
+<td><strong>~3–6 s</strong></td>
 <td>Many × worse than Level 1</td>
 </tr>
 <tr>
 <td>Latency</td>
 <td>p99</td>
-<td><strong>see screenshot</strong></td>
-<td>Hard ceiling — connections timing out</td>
+<td><strong>~6 s</strong> (hard ceiling)</td>
+<td>Connections timing out at OS level</td>
 </tr>
 <tr>
 <td>Latency</td>
 <td>p50</td>
-<td><strong>see screenshot</strong></td>
+<td><strong>~1–2 s</strong></td>
 <td>Even the median is unusable</td>
 </tr>
 <tr>
@@ -479,47 +486,88 @@ Zero disk. Zero compilation.
 <span class="hljs-attr">opcache.memory_consumption</span> = <span class="hljs-number">256</span>  <span class="hljs-comment">; MB</span>
 </code></pre>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="17" data-class="screenshot" lang="C" class="screenshot" style="--class:screenshot;">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="17" data-class="dense" lang="C" class="dense" style="--class:dense;">
 <h2 id="%F0%9F%93%B8-level-1--demo-dashboard-50-virtual-users"><img class="emoji" draggable="false" alt="📸" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4f8.svg" data-marp-twemoji=""/> Level 1 — Demo Dashboard (50 Virtual Users)</h2>
 <p><img src="screenshots/l1-00-demo.png" alt="" style="width:1060px;" /></p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="18" lang="C">
 <h2 id="level-1--reading-the-dashboard">Level 1 — reading the dashboard</h2>
-<div class="cols3">
-<div class="metric metric-blue"><div class="num">50</div><div class="lbl">Peak Virtual Users</div></div>
-<div class="metric metric-green"><div class="num">see →</div><div class="lbl">Peak requests/s</div></div>
-<div class="metric metric-gold"><div class="num">see →</div><div class="lbl">p95 Latency</div></div>
-</div>
+<table>
+<thead>
+<tr>
+<th>Panel</th>
+<th>Metric</th>
+<th>Value</th>
+<th>What it means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Virtual Users</td>
+<td>Peak</td>
+<td>50</td>
+<td>Steady-state load</td>
+</tr>
+<tr>
+<td>Requests/s</td>
+<td>Peak</td>
+<td><strong>~65 req/s</strong> <img class="emoji" draggable="false" alt="⭐" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2b50.svg" data-marp-twemoji=""/></td>
+<td>Stable — no collapse</td>
+</tr>
+<tr>
+<td>Latency</td>
+<td>p95</td>
+<td><strong>~130 ms</strong> <img class="emoji" draggable="false" alt="⭐" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2b50.svg" data-marp-twemoji=""/></td>
+<td>Was 3+ s — now human-perceptible</td>
+</tr>
+<tr>
+<td>FPM Workers</td>
+<td>Peak active</td>
+<td>~12 / 20</td>
+<td>Headroom left</td>
+</tr>
+<tr>
+<td>FPM Queue</td>
+<td>Depth</td>
+<td><strong>0</strong> <img class="emoji" draggable="false" alt="⭐" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2b50.svg" data-marp-twemoji=""/></td>
+<td><strong>Crash eliminated</strong> — was ~250</td>
+</tr>
+<tr>
+<td>MariaDB</td>
+<td>Peak threads</td>
+<td><strong>~12 threads</strong> <img class="emoji" draggable="false" alt="⭐" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2b50.svg" data-marp-twemoji=""/></td>
+<td>Every request still hitting MySQL</td>
+</tr>
+<tr>
+<td>Requests vs FPM</td>
+<td>Gap</td>
+<td>none</td>
+<td>No page cache yet — all to PHP</td>
+</tr>
+<tr>
+<td>Redis</td>
+<td>Hit rate</td>
+<td><strong>0% → ~80%</strong> <img class="emoji" draggable="false" alt="⭐" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2b50.svg" data-marp-twemoji=""/></td>
+<td>Cache warming during test</td>
+</tr>
+<tr>
+<td>Redis</td>
+<td>Keys / memory</td>
+<td>~46K keys · 14.5 MB</td>
+<td>Object cache in RAM</td>
+</tr>
+<tr>
+<td>Redis ops/s</td>
+<td>Peak</td>
+<td>~6,000</td>
+<td>vs ~300 MySQL queries/s</td>
+</tr>
+</tbody>
+</table>
 <br />
-<div class="cols">
-<div>
-<p><strong>FPM Workers chart — top right:</strong></p>
-<ul>
-<li>Active Workers peaked at <strong>~10–15 / 20</strong></li>
-<li>Queue Depth: <strong>0 throughout</strong> ← the stack did not crash</li>
-<li>Idle workers always available → Nginx never queued</li>
-</ul>
-<p><strong>MariaDB Threads — bottom right:</strong></p>
-<ul>
-<li>Spiked to <strong>~10–15 threads running</strong></li>
-<li>Every request still hitting MySQL</li>
-</ul>
-</div>
-<div>
-<p><strong>Requests vs FPM — bottom left:</strong></p>
-<ul>
-<li>Both lines nearly overlap</li>
-<li>Tiny gap = almost no caching yet</li>
-<li><strong>Every Nginx request forwarded to PHP</strong></li>
-</ul>
-<p><strong>Redis Hit Rate — bottom right:</strong></p>
-<ul>
-<li>Climbed from 0% → <strong>82.3%</strong> as cache warmed</li>
-<li>46,000 keys, 14.5 MB used</li>
-<li>6,000+ Redis ops/s vs ~300 MySQL queries/s</li>
-</ul>
-</div>
-</div>
+<blockquote>
+<p><img class="emoji" draggable="false" alt="⭐" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2b50.svg" data-marp-twemoji=""/> = the 5 metrics that tell the story. Queue gone. Latency tamed. But MySQL still busy → <strong>L2 fixes that.</strong></p>
+</blockquote>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="19" lang="C">
 <h2 id="l0-%E2%86%92-l1-the-jump">L0 → L1: the jump</h2>
@@ -537,49 +585,49 @@ Zero disk. Zero compilation.
 <td>Crash at 50 Virtual Users</td>
 <td><img class="emoji" draggable="false" alt="❌" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/274c.svg" data-marp-twemoji=""/> server buckles</td>
 <td><img class="emoji" draggable="false" alt="✅" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2705.svg" data-marp-twemoji=""/> stable</td>
-<td><strong>crash eliminated</strong></td>
+<td><img class="emoji" draggable="false" alt="⭐" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2b50.svg" data-marp-twemoji=""/> <strong>crash eliminated</strong></td>
 </tr>
 <tr>
 <td>Peak requests/s</td>
 <td>~140 → <strong>collapse</strong></td>
-<td><strong>see screenshot</strong></td>
+<td><strong>~65 req/s</strong></td>
 <td>stable throughput</td>
 </tr>
 <tr>
 <td>p95 Latency</td>
 <td>~3 s</td>
-<td><strong>see screenshot</strong></td>
-<td><strong>−90%+</strong></td>
+<td><strong>~130 ms</strong></td>
+<td><img class="emoji" draggable="false" alt="⭐" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2b50.svg" data-marp-twemoji=""/> <strong>−96%</strong></td>
 </tr>
 <tr>
 <td>p99 Latency</td>
-<td>6 s flat ceiling</td>
-<td><strong>see screenshot</strong></td>
-<td><strong>−90%+</strong></td>
+<td>~6 s flat ceiling</td>
+<td><strong>~350 ms</strong></td>
+<td>−94%</td>
 </tr>
 <tr>
 <td>CPU @ 50 Virtual Users</td>
 <td>~100%</td>
 <td><strong>~25%</strong></td>
-<td>−75%</td>
+<td><img class="emoji" draggable="false" alt="⭐" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2b50.svg" data-marp-twemoji=""/> <strong>−75%</strong></td>
 </tr>
 <tr>
 <td>FPM queue depth</td>
 <td>~250 backlog</td>
 <td><strong>0</strong></td>
-<td><img class="emoji" draggable="false" alt="✅" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2705.svg" data-marp-twemoji=""/></td>
+<td><img class="emoji" draggable="false" alt="⭐" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2b50.svg" data-marp-twemoji=""/> <strong>queue gone</strong></td>
 </tr>
 <tr>
 <td>DB Threads peak</td>
 <td>20+</td>
-<td><strong>see screenshot</strong></td>
-<td>significant drop</td>
+<td><strong>~12</strong></td>
+<td>−40%</td>
 </tr>
 <tr>
 <td>Redis hit ratio</td>
 <td>—</td>
-<td><strong>~80%+</strong></td>
-<td>new layer added</td>
+<td><strong>~80%</strong></td>
+<td><img class="emoji" draggable="false" alt="⭐" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2b50.svg" data-marp-twemoji=""/> <strong>new cache layer</strong></td>
 </tr>
 </tbody>
 </table>
@@ -679,39 +727,84 @@ Logged-in · Cart · Checkout · Admin</p>
 <h2 id="%F0%9F%93%B8-level-2--demo-dashboard-50-virtual-users"><img class="emoji" draggable="false" alt="📸" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4f8.svg" data-marp-twemoji=""/> Level 2 — Demo Dashboard (50 Virtual Users)</h2>
 <p><img src="screenshots/l2-00-demo.png" alt="" style="width:1060px;" /></p>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="27" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="27" data-class="dense" lang="C" class="dense" style="--class:dense;">
 <h2 id="level-2--reading-the-dashboard">Level 2 — reading the dashboard</h2>
-<div class="cols3">
-<div class="metric metric-green"><div class="num">see →</div><div class="lbl">Peak requests/s (~+10%)</div></div>
-<div class="metric metric-green"><div class="num">see →</div><div class="lbl">p95 Latency (~−40%)</div></div>
-<div class="metric metric-green"><div class="num">see →</div><div class="lbl">CPU (~−30%)</div></div>
-</div>
+<table>
+<thead>
+<tr>
+<th>Panel</th>
+<th>Metric</th>
+<th>Value</th>
+<th>What it means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Virtual Users</td>
+<td>Peak</td>
+<td>50</td>
+<td>Same load as L1</td>
+</tr>
+<tr>
+<td>Requests/s</td>
+<td>Peak</td>
+<td><strong>~70–75 req/s</strong> <img class="emoji" draggable="false" alt="⭐" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2b50.svg" data-marp-twemoji=""/></td>
+<td>~+10% vs L1 — nginx serving from disk</td>
+</tr>
+<tr>
+<td>Latency</td>
+<td>p95</td>
+<td><strong>~70–80 ms</strong> <img class="emoji" draggable="false" alt="⭐" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2b50.svg" data-marp-twemoji=""/></td>
+<td>~−40% vs L1 — most requests never hit PHP</td>
+</tr>
+<tr>
+<td>CPU</td>
+<td>@ 50 VU</td>
+<td><strong>~18%</strong></td>
+<td>Was ~25% at L1 — less PHP work</td>
+</tr>
+<tr>
+<td>FPM Workers</td>
+<td>Peak active</td>
+<td><strong>~11 / 20</strong></td>
+<td>Was ~14 — less load on PHP</td>
+</tr>
+<tr>
+<td>FPM Queue</td>
+<td>Depth</td>
+<td><strong>0</strong> <img class="emoji" draggable="false" alt="⭐" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2b50.svg" data-marp-twemoji=""/></td>
+<td>Stays clean — cache absorbs the burst</td>
+</tr>
+<tr>
+<td>FPM Request Rate</td>
+<td>vs Nginx</td>
+<td><strong>~20–30%</strong> <img class="emoji" draggable="false" alt="⭐" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2b50.svg" data-marp-twemoji=""/></td>
+<td>Only cache misses reach PHP</td>
+</tr>
+<tr>
+<td>FastCGI Cache</td>
+<td>Offload</td>
+<td><strong>~70%</strong> <img class="emoji" draggable="false" alt="⭐" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2b50.svg" data-marp-twemoji=""/></td>
+<td>70% of requests: PHP never ran</td>
+</tr>
+<tr>
+<td>MariaDB</td>
+<td>Peak threads</td>
+<td><strong>~3</strong> <img class="emoji" draggable="false" alt="⭐" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2b50.svg" data-marp-twemoji=""/></td>
+<td>Was ~12 — 75–80% fewer DB queries</td>
+</tr>
+<tr>
+<td>Requests vs FPM</td>
+<td>Gap</td>
+<td><strong>~50 req/s</strong></td>
+<td>nginx total minus PHP-only = cached requests</td>
+</tr>
+</tbody>
+</table>
 <br />
-<div class="cols">
-<div>
-<p><strong>FPM Workers — top right:</strong></p>
-<ul>
-<li>Active Workers peaked at <strong>11 / 20</strong> (was 14)</li>
-<li>Queue Depth: <strong>0</strong> — same as L1 but with less work</li>
-<li>FPM Request Rate: only <strong>~20–30% of Nginx requests/s</strong></li>
-<li><strong>70–80% of requests served from cache — PHP never ran</strong></li>
-</ul>
-</div>
-<div>
-<p><strong>MariaDB Threads — bottom right:</strong></p>
-<ul>
-<li>Max <strong>~3 threads running</strong> (was ~12–15!)</li>
-<li><strong>~75–80% fewer DB queries</strong> — cache bypass requests only</li>
-<li>Buffer pool pressure gone</li>
-</ul>
-<p><strong>Requests vs FPM gap (see screenshot):</strong></p>
-<ul>
-<li>Nginx: total requests/s (top line)</li>
-<li>PHP-FPM: only cache misses (bottom line)</li>
-<li>Gap = <strong>requests served from disk — PHP never ran</strong></li>
-</ul>
-</div>
-</div>
+<blockquote>
+<p><img class="emoji" draggable="false" alt="⭐" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2b50.svg" data-marp-twemoji=""/> = the 5 metrics that tell the story. DB threads: 12 → <strong>3</strong>. The gap between nginx and FPM lines <strong>is</strong> the cache.</p>
+</blockquote>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="28" lang="C">
 <h2 id="l0-%E2%86%92-l1-%E2%86%92-l2-the-progression">L0 → L1 → L2: the progression</h2>
@@ -728,14 +821,14 @@ Logged-in · Cart · Checkout · Admin</p>
 <tr>
 <td>Peak requests/s</td>
 <td>~140 → <img class="emoji" draggable="false" alt="💥" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4a5.svg" data-marp-twemoji=""/></td>
-<td>see L1 screenshot</td>
-<td><strong>see L2 screenshot</strong></td>
+<td>~65 req/s</td>
+<td><strong>~70–75 req/s</strong></td>
 </tr>
 <tr>
 <td>p95 Latency</td>
 <td>~3 s <img class="emoji" draggable="false" alt="💥" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4a5.svg" data-marp-twemoji=""/></td>
-<td>see L1 screenshot</td>
-<td><strong>see L2 screenshot</strong></td>
+<td>~130 ms</td>
+<td><strong>~70–80 ms</strong></td>
 </tr>
 <tr>
 <td>CPU @ 50 Virtual Users</td>
@@ -746,8 +839,8 @@ Logged-in · Cart · Checkout · Admin</p>
 <tr>
 <td>FPM workers (peak)</td>
 <td>—</td>
-<td>see screenshot</td>
-<td><strong>see screenshot</strong></td>
+<td>~12 / 20</td>
+<td><strong>~11 / 20</strong></td>
 </tr>
 <tr>
 <td>FPM queue depth</td>
@@ -863,14 +956,14 @@ Scale that to a Black Friday spike — 10× traffic hits nginx, not your server.
 <tbody>
 <tr>
 <td>Peak requests/s @ 50 Virtual Users</td>
-<td>see screenshot</td>
-<td><strong>see screenshot</strong></td>
+<td>~65 req/s</td>
+<td><strong>~70–75 req/s</strong></td>
 <td><strong>~+10%</strong></td>
 </tr>
 <tr>
 <td>p95 Latency</td>
-<td>see screenshot</td>
-<td><strong>see screenshot</strong></td>
+<td>~130 ms</td>
+<td><strong>~70–80 ms</strong></td>
 <td><strong>~−40%</strong></td>
 </tr>
 <tr>
@@ -881,8 +974,8 @@ Scale that to a Black Friday spike — 10× traffic hits nginx, not your server.
 </tr>
 <tr>
 <td>FPM workers (peak)</td>
-<td>see screenshot</td>
-<td><strong>see screenshot</strong></td>
+<td>~12 / 20</td>
+<td><strong>~11 / 20</strong></td>
 <td>fewer needed</td>
 </tr>
 <tr>
@@ -904,9 +997,9 @@ Scale that to a Black Friday spike — 10× traffic hits nginx, not your server.
 <td><img class="emoji" draggable="false" alt="✅" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2705.svg" data-marp-twemoji=""/> majority served from disk</td>
 </tr>
 <tr>
-<td>Requests in 5 min</td>
-<td>see screenshot</td>
-<td><strong>see screenshot</strong></td>
+<td>Requests in 5 min (~300s)</td>
+<td>~19,500</td>
+<td><strong>~21,500</strong></td>
 <td><strong>~+20–25%</strong></td>
 </tr>
 <tr>
@@ -964,46 +1057,54 @@ Everything else is a static file served by Nginx from disk.</p>
 <th>Metric</th>
 <th>Level 2</th>
 <th>Level 4 (estimated)</th>
+<th>Why</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>requests/s @ 50 Virtual Users</td>
-<td>70</td>
+<td>~70–75</td>
 <td><strong>500–1,500+</strong></td>
+<td>SSD read vs PHP execution</td>
 </tr>
 <tr>
 <td>p95 Latency</td>
-<td>79 ms</td>
+<td>~70–80 ms</td>
 <td><strong>~3–5 ms</strong></td>
+<td>file serve vs 300 DB calls</td>
 </tr>
 <tr>
 <td>CPU @ 50 Virtual Users</td>
-<td>18%</td>
+<td>~18%</td>
 <td><strong>&lt;3%</strong></td>
+<td>no PHP, no MySQL</td>
 </tr>
 <tr>
 <td>DB Threads</td>
-<td>3</td>
+<td>~3</td>
 <td><strong>~0</strong></td>
+<td>anonymous traffic never hits DB</td>
 </tr>
 <tr>
 <td>PHP workers needed</td>
-<td>11</td>
-<td><strong>0</strong></td>
+<td>~11</td>
+<td><strong>~0</strong></td>
+<td>static files bypass FPM entirely</td>
 </tr>
 </tbody>
 </table>
 <br />
 <p><strong>The math:</strong></p>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code>Level 2 bottleneck: PHP executing 300+ DB queries per page
-  → Redis saves 82%, FastCGI saves another 70%
-  → PHP still runs for cache misses
+  → Redis: 82% of DB calls answered from RAM (object cache)
+  → FastCGI: 70% of page requests never reach PHP at all
+  → PHP still runs for the remaining 30% of requests (cold cache, dynamic pages)
 
 Level 4: nginx reads a .html file from disk
   → ~0.1ms SSD seek (or OS page cache → ~0.01ms)
   → 2 vCPU can sustain ~10,000 file serves/second
   → FPM pool never touched for anonymous traffic
+  → 50 VU → ~500–1,500 req/s (vs ~70–75 at L2)
 </code></pre>
 <blockquote>
 <p><strong>The trade-off:</strong> content is stale until next <code>wp simply-static run</code>.<br />
@@ -1013,14 +1114,7 @@ Use Level 2 for: live inventory, personalised pages, real-time data.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="37" lang="C">
 <h2 id="level-3--cloudflare-cdn">Level 3 — Cloudflare CDN</h2>
-<p><strong>The concept:</strong></p>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code>Browser (anywhere in the world)
-  ↓
-Cloudflare Edge (300+ PoPs — nearest data center, &lt;30ms away)
-  ├── CACHE HIT  → response from edge   (0ms origin, ~10–20ms to browser)
-  └── CACHE MISS → fetch from your VPS  (once per TTL, then cached at edge)
-</code></pre>
-<p>Your $12 VPS <strong>only sees cache misses</strong> — ~10–20% of total traffic during a spike.</p>
+<p><img src="diagrams/cloudflare-cdn.png" alt="" style="width:860px;" /></p>
 <table>
 <thead>
 <tr>
@@ -1033,9 +1127,9 @@ Cloudflare Edge (300+ PoPs — nearest data center, &lt;30ms away)
 <tbody>
 <tr>
 <td>TTFB for cached pages</td>
-<td>see L2 screenshot</td>
-<td><strong>10–20 ms</strong></td>
-<td>−75%+</td>
+<td>~70–80 ms</td>
+<td><strong>~10–20 ms</strong></td>
+<td><strong>~−75–80%</strong></td>
 </tr>
 <tr>
 <td>Origin requests at peak</td>
@@ -1068,14 +1162,12 @@ Cloudflare Edge (300+ PoPs — nearest data center, &lt;30ms away)
 The VPS becomes the <strong>origin</strong> — it only handles 10–20% of peak load.<br />
 No code changes. DNS cutover is the entire &quot;deployment&quot;.</p>
 </blockquote>
-<blockquote>
-<p>Level 3 turns your $12 VPS into a globally distributed site.<br />
-The VPS becomes the <strong>origin</strong> — it only handles 10–20% of peak load.<br />
-No code changes. DNS cutover is the entire &quot;deployment&quot;.</p>
-</blockquote>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="38" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="38" data-class="dense" lang="C" class="dense" style="--class:dense;">
 <h2 id="cloudflare-free-plan--what-you-get">Cloudflare Free Plan — what you get</h2>
+<blockquote>
+<p><strong>PoP = Point of Presence</strong> — a physical Cloudflare data center. 300+ worldwide means a server is always &lt;30ms from your visitor.</p>
+</blockquote>
 <div class="cols">
 <div>
 <p><strong>Performance (free)</strong></p>
@@ -1084,7 +1176,6 @@ No code changes. DNS cutover is the entire &quot;deployment&quot;.</p>
 <li><img class="emoji" draggable="false" alt="🌍" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f30d.svg" data-marp-twemoji=""/> <strong>Global CDN</strong> — 300+ PoPs worldwide</li>
 <li><img class="emoji" draggable="false" alt="⚡" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/26a1.svg" data-marp-twemoji=""/> <strong>Full page caching</strong> via Cache Rules</li>
 <li><img class="emoji" draggable="false" alt="🖼️" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f5bc.svg" data-marp-twemoji=""/> <strong>Polish</strong> — automatic image compression</li>
-<li><img class="emoji" draggable="false" alt="🚀" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f680.svg" data-marp-twemoji=""/> <strong>Rocket Loader</strong> — async JS loading</li>
 <li><img class="emoji" draggable="false" alt="🔒" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f512.svg" data-marp-twemoji=""/> <strong>Free SSL/TLS</strong> — automatic HTTPS</li>
 <li><img class="emoji" draggable="false" alt="📡" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4e1.svg" data-marp-twemoji=""/> <strong>HTTP/2 + HTTP/3 (QUIC)</strong> — automatic</li>
 </ul>
@@ -1103,16 +1194,12 @@ No code changes. DNS cutover is the entire &quot;deployment&quot;.</p>
 </div>
 </div>
 </div>
-<br />
-<p><strong>One Cache Rule in the Cloudflare dashboard:</strong></p>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code>URL:            *.yourdomain.com/*
-Cache Level:    Cache Everything
-Edge TTL:       1 hour
-Bypass cookie:  wordpress_logged_in.*|woocommerce_cart.*
+<p><strong>One Cache Rule:</strong></p>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code>URL: *.yourdomain.com/*  Cache Level: Cache Everything  Edge TTL: 1 hour
+Bypass cookie: wordpress_logged_in.*|woocommerce_cart.*
 </code></pre>
 <blockquote>
-<p>Same bypass logic as FastCGI cache — logged-in + cart users always hit origin.<br />
-Everything else: served from the nearest Cloudflare PoP. VPS stays idle.</p>
+<p>Same bypass logic as FastCGI cache — logged-in + cart users always hit origin. VPS stays idle.</p>
 </blockquote>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="39" lang="C">

@@ -1,6 +1,6 @@
 # Context — WordPress Europe 2026 Repo
 
-> **Last updated:** 2026-05-15
+> **Last updated:** 2026-05-16
 > **Status:** ✅ Ready for presentation — `bash scripts/full-run.sh` regenerates everything end-to-end
 > **Purpose:** Session continuity — paste this into any AI tool to resume work.
 
@@ -105,6 +105,10 @@ diagrams/
   level-4-hybrid-static.excalidraw
   cache-hierarchy.excalidraw
   fpm-pool-math.excalidraw
+  apache-math.excalidraw          # Apache worker/thread math (used on slide "The Apache math")
+  redis-intercept.excalidraw      # Redis flow: 246 HITs vs 54 MySQL misses per page request
+  fastcgi-intercept.excalidraw    # FastCGI cache: 70 HIT vs 30 BYPASS per 100 requests
+  fpm-offload.excalidraw          # Time-series chart: nginx total vs PHP-FPM gap (the "money slide")
 
 screenshots/
   l0-00-demo.png .. l0-06-k6-live.png      # Level 0 Apache baseline (7 dashboards)
@@ -113,6 +117,17 @@ screenshots/
   l2-00-demo.png .. l2-06-k6-live.png      # Level 2 FastCGI cache (7 dashboards)
   screenshots-DDMMYY-NNN/                  # Auto-rotated backups from previous runs
 ```
+
+## Slide State (as of 2026-05-16)
+
+- All hardcoded run-specific numbers replaced with approximate ranges (~)
+- HTML font reduced 20% (sed post-processing: 26px → 20.8px)
+- `<!-- _class: dense -->` + 4-col table on: "Level 1 — reading the dashboard", "Level 2 — reading the dashboard"
+- All `see screenshot` values replaced with real approximates in: L0→L1 jump, L0→L1→L2 progression, L1 vs L2 table
+- `scripts/export-diagrams.js` — natural bounding box (no hardcoded 1200×700 clip)
+- `scripts/normalize-diagrams.js` — adds all excalidraw.com-required fields before export
+- `scripts/screenshot.js` — rotation scoped to current PREFIX (l0/l1 screenshots no longer clobbered by l2 run)
+- `make diagrams` runs normalize → export automatically
 
 ## What Still Needs Doing
 
