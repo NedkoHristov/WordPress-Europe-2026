@@ -12,7 +12,7 @@ Clone → `docker compose` → reproduce every number from the talk.
 # Start Level 0 (Apache crash baseline) + full observability stack
 make level-0
 make setup          # install WP + WooCommerce (first time only)
-make bloat          # seed 50k posts, 1k products, 25k revisions
+make bloat          # seed 2.5k posts + 5k revisions, 500 products + 1.5k revisions
 
 # Open Grafana
 open http://localhost:3000   # admin / grafana

@@ -130,7 +130,7 @@ if [[ "$SKIP_SETUP" == "1" ]]; then
   warn "SKIP_SETUP=1 — skipping WordPress install"
 else
   echo "Running wp-setup.sh inside container..."
-  $COMPOSE --profile apache exec wordpress-apache wp-setup.sh
+  $COMPOSE --profile apache exec -T wordpress-apache wp-setup.sh
   ok "WordPress installed — admin / admin123"
 fi
 
@@ -143,7 +143,7 @@ if [[ "$SKIP_BLOAT" == "1" ]]; then
   warn "SKIP_BLOAT=1 — skipping bloat seeding"
 else
   echo "Running wp-bloat.sh inside container (takes ~3 min)..."
-  $COMPOSE --profile apache exec wordpress-apache wp-bloat.sh
+  $COMPOSE --profile apache exec -T wordpress-apache wp-bloat.sh
   ok "Bloat data seeded"
 fi
 
@@ -293,9 +293,17 @@ sleep 10
 run_snapshot "l2" 20 5
 
 # =============================================================================
-# PHASE 8 — Summary
+# PHASE 8 — Regenerate slides
+# ================================================================
+CHROME_PATH="${CHROME_PATH:-/home/nedko/.cache/ms-playwright/chromium-1223/chrome-linux64/chrome}"
+step "Phase 8 — Regenerate presentation slides"
+echo "Generating HTML + PDF + PPTX from SLIDES-RICH.md..."
+CHROME_PATH="$CHROME_PATH" make -C "$REPO_DIR" slides
+ok "Slides regenerated → SLIDES-RICH.html / .pdf / .pptx / -editable.pptx"
+
+# PHASE 9 — Summary
 # =============================================================================
-step "Phase 8 — Done! 🎉"
+step "Phase 9 — Done! 🎉"
 
 echo ""
 echo -e "${BOLD}Screenshots saved:${RESET}"

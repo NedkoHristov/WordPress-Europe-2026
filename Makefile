@@ -46,7 +46,7 @@ help:
 	@echo ""
 	@echo "$(GREEN)Utilities:$(RESET)"
 	@echo "  make setup         Install WordPress + seed demo content"
-	@echo "  make bloat         Seed 50k posts, 1k products, revisions, transients"
+	@echo "  make bloat         Seed 2.5k posts + 5k revisions, 500 products + 1.5k revisions"
 	@echo "  make baseline      Record before/after perf snapshot (JSON to results/)"
 	@echo "  make static-build  Run Simply Static export → results/static-export/"
 	@echo "  make reset         Nuclear reset — destroy volumes and rebuild"
@@ -246,11 +246,13 @@ CHROME ?= /home/nedko/.cache/ms-playwright/chromium-1223/chrome-linux64/chrome
 slides:
 	@echo "$(YELLOW)▶ Generating SLIDES-RICH.html$(RESET)"
 	npx @marp-team/marp-cli SLIDES-RICH.md --allow-local-files --html --output SLIDES-RICH.html
+	@echo "$(YELLOW)▶ Generating SLIDES-RICH.pdf$(RESET)"
+	CHROME_PATH=$(CHROME) npx @marp-team/marp-cli SLIDES-RICH.md --allow-local-files --pdf --output SLIDES-RICH.pdf
 	@echo "$(YELLOW)▶ Generating SLIDES-RICH.pptx$(RESET)"
 	CHROME_PATH=$(CHROME) npx @marp-team/marp-cli SLIDES-RICH.md --allow-local-files --pptx --output SLIDES-RICH.pptx
 	@echo "$(YELLOW)▶ Generating SLIDES-RICH-editable.pptx$(RESET)"
 	CHROME_PATH=$(CHROME) npx @marp-team/marp-cli SLIDES-RICH.md --allow-local-files --pptx --pptx-editable --output SLIDES-RICH-editable.pptx
-	@echo "$(GREEN)✓ Slides ready: SLIDES-RICH.html · SLIDES-RICH.pptx · SLIDES-RICH-editable.pptx$(RESET)"
+	@echo "$(GREEN)✓ Slides ready: SLIDES-RICH.html · SLIDES-RICH.pdf · SLIDES-RICH.pptx · SLIDES-RICH-editable.pptx$(RESET)"
 
 .PHONY: static-build
 static-build:
