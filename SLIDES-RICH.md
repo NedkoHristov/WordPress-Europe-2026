@@ -542,19 +542,7 @@ opcache.memory_consumption = 256  ; MB
 
 **46,000 cached keys · 14.5 MB · 6,000 ops/s at peak**
 
-```
-WordPress makes 300+ DB calls per page request.
-Redis intercepts most of them:
-
-wp_get_option('siteurl')        → Redis HIT → 0.1 ms
-wp_get_option('blogname')       → Redis HIT → 0.1 ms
-WP_Query (recent posts)         → Redis HIT → 0.1 ms
-get_post_meta(post_id, '_price')→ Redis HIT → 0.1 ms
-WC product lookup               → Redis MISS → MySQL → 4 ms → cached
-
-After warmup: ~82% of DB calls answered from memory.
-MySQL sees ~54 queries/request instead of 300+.
-```
+![w:900](diagrams/redis-intercept.png)
 
 > Redis did not prevent the crash at Level 0 because we never got there.
 > It **would** delay the crash significantly — but doesn't eliminate it.
@@ -697,24 +685,9 @@ make level-2   # 10 seconds to switch. Same hardware.
 
 ## Level 2 — the FPM offload panel explained
 
-**Bottom-right panel: PHP-FPM Offload — Requests NOT hitting PHP**
+**~70–75 req/s total · only ~20–30% reach PHP · ~70% gap = cache**
 
-```
-Total requests/s (Nginx)    ████████████████████████  ← everything (see screenshot)
-Requests/s hitting PHP-FPM  ████████                  ← only cache misses (~20–30%)
-
-Gap                  ████████████████          ← served from cache (~70–80%)
-                                                            PHP never ran
-                                                            MySQL never queried
-```
-
-<br>
-
-**In 5 minutes of the test (see screenshot):**
-- Majority served from nginx cache (disk read, <10ms)
-- Minority required PHP execution (cold cache, logged in, dynamic pages)
-
-<br>
+![w:900](diagrams/fpm-offload.png)
 
 > **This is the money slide.**
 > The gap between the two lines is PHP execution that never happened.
@@ -805,33 +778,15 @@ After tuning:
 
 ## Level 4 — the concept
 
-**Build time** (once per publish cycle, after content is seeded):
-```bash
-# Setup — install the Simply Static plugin:
-wp plugin install simply-static --activate
+![w:900](diagrams/static-concept.png)
 
-# Export — trigger once after content is ready:
-wp simply-static run
-# Crawls every published URL → flat HTML + assets
-# Output: static/export/  →  served by Nginx, zero PHP
+```bash
+wp plugin install simply-static --activate
+wp simply-static run   # crawls every URL → flat HTML + assets → static/export/
 ```
 
 > **Simply Static** is a WordPress plugin — no external tooling needed.
-> Run once after seeding 2,500 posts + 500 products. Re-run after any publish.
-> Takes ~2–5 min. Output directory is the same `static/export/` Nginx already serves.
-
-**Runtime** (every anonymous request):
-```
-Browser → Nginx
-  ├── /           → static/export/index.html   (0ms PHP)
-  ├── /post-2498/ → static/export/post-2498/index.html   (0ms PHP)
-  └── /checkout   → proxy → WordPress (live)
-     /wp-admin    → proxy → WordPress (live)
-     /wp-json/*   → proxy → WordPress (live)
-```
-
-**WordPress only activates for cart / checkout / admin.**
-Everything else is a static file served by Nginx from disk.
+> Re-run after any publish. Takes ~2–5 min. WordPress only activates for cart / checkout / admin.
 
 ---
 

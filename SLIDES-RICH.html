@@ -85,6 +85,13 @@ section.dense .metric .num { font-size: 1.8em; }<br />
 section.dense li { line-height: 1.4; margin-bottom: 0.1em; }<br />
 section.dense p, section.dense li { font-size: 0.9em; }<br />
 section.dense blockquote { margin: 10px 0; }</p>
+<p>section.compact { padding: 16px 36px; font-size: 0.62em; }<br />
+section.compact h2 { font-size: 1.5em; margin-bottom: 0.3em; }<br />
+section.compact h3 { font-size: 1.2em; }<br />
+section.compact .card { padding: 8px 14px; margin: 4px 0; }<br />
+section.compact li { line-height: 1.3; margin-bottom: 0.05em; }<br />
+section.compact blockquote { margin: 6px 0; }<br />
+section.compact br { display: none; }</p>
 <h2 id="%E2%94%80%E2%94%80-metric-boxes-%E2%94%80%E2%94%80-metric--text-align-center-padding-16px-metric-num--font-size-24em-font-weight-900-line-height-1-metric-lbl--font-size-07em-color-8b949e-margin-top-4px-metric-red-num--color-ff6b6b-metric-green-num--color-51cf66-metric-blue-num--color-58a6ff-metric-gold-num--color-ffa657-">/* ── Metric boxes ── */<br />
 .metric { text-align: center; padding: 16px; }<br />
 .metric .num { font-size: 2.4em; font-weight: 900; line-height: 1; }<br />
@@ -656,18 +663,7 @@ But every request still hits PHP and MySQL — there is room to go further.</p>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="22" lang="C">
 <h2 id="level-1--what-redis-is-actually-doing">Level 1 — what Redis is actually doing</h2>
 <p><strong>46,000 cached keys · 14.5 MB · 6,000 ops/s at peak</strong></p>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code>WordPress makes 300+ DB calls per page request.
-Redis intercepts most of them:
-
-wp_get_option('siteurl')        → Redis HIT → 0.1 ms
-wp_get_option('blogname')       → Redis HIT → 0.1 ms
-WP_Query (recent posts)         → Redis HIT → 0.1 ms
-get_post_meta(post_id, '_price')→ Redis HIT → 0.1 ms
-WC product lookup               → Redis MISS → MySQL → 4 ms → cached
-
-After warmup: ~82% of DB calls answered from memory.
-MySQL sees ~54 queries/request instead of 300+.
-</code></pre>
+<p><img src="diagrams/redis-intercept.png" alt="" style="width:900px;" /></p>
 <blockquote>
 <p>Redis did not prevent the crash at Level 0 because we never got there.<br />
 It <strong>would</strong> delay the crash significantly — but doesn't eliminate it.<br />
@@ -888,21 +884,8 @@ DB threads: 12.5 → <strong>3</strong>. The bottleneck is gone.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="30" lang="C">
 <h2 id="level-2--the-fpm-offload-panel-explained">Level 2 — the FPM offload panel explained</h2>
-<p><strong>Bottom-right panel: PHP-FPM Offload — Requests NOT hitting PHP</strong></p>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code>Total requests/s (Nginx)    ████████████████████████  ← everything (see screenshot)
-Requests/s hitting PHP-FPM  ████████                  ← only cache misses (~20–30%)
-
-Gap                  ████████████████          ← served from cache (~70–80%)
-                                                            PHP never ran
-                                                            MySQL never queried
-</code></pre>
-<br />
-<p><strong>In 5 minutes of the test (see screenshot):</strong></p>
-<ul>
-<li>Majority served from nginx cache (disk read, &lt;10ms)</li>
-<li>Minority required PHP execution (cold cache, logged in, dynamic pages)</li>
-</ul>
-<br />
+<p><strong>~70–75 req/s total · only ~20–30% reach PHP · ~70% gap = cache</strong></p>
+<p><img src="diagrams/fpm-offload.png" alt="" style="width:900px;" /></p>
 <blockquote>
 <p><strong>This is the money slide.</strong><br />
 The gap between the two lines is PHP execution that never happened.<br />
@@ -1032,30 +1015,14 @@ because MariaDB has headroom now.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="35" lang="C">
 <h2 id="level-4--the-concept">Level 4 — the concept</h2>
-<p><strong>Build time</strong> (once per publish cycle, after content is seeded):</p>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-bash"><span class="hljs-comment"># Setup — install the Simply Static plugin:</span>
-wp plugin install simply-static --activate
-
-<span class="hljs-comment"># Export — trigger once after content is ready:</span>
-wp simply-static run
-<span class="hljs-comment"># Crawls every published URL → flat HTML + assets</span>
-<span class="hljs-comment"># Output: static/export/  →  served by Nginx, zero PHP</span>
+<p><img src="diagrams/static-concept.png" alt="" style="width:900px;" /></p>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-bash">wp plugin install simply-static --activate
+wp simply-static run   <span class="hljs-comment"># crawls every URL → flat HTML + assets → static/export/</span>
 </code></pre>
 <blockquote>
 <p><strong>Simply Static</strong> is a WordPress plugin — no external tooling needed.<br />
-Run once after seeding 2,500 posts + 500 products. Re-run after any publish.<br />
-Takes ~2–5 min. Output directory is the same <code>static/export/</code> Nginx already serves.</p>
+Re-run after any publish. Takes ~2–5 min. WordPress only activates for cart / checkout / admin.</p>
 </blockquote>
-<p><strong>Runtime</strong> (every anonymous request):</p>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code>Browser → Nginx
-  ├── /           → static/export/index.html   (0ms PHP)
-  ├── /post-2498/ → static/export/post-2498/index.html   (0ms PHP)
-  └── /checkout   → proxy → WordPress (live)
-     /wp-admin    → proxy → WordPress (live)
-     /wp-json/*   → proxy → WordPress (live)
-</code></pre>
-<p><strong>WordPress only activates for cart / checkout / admin.</strong><br />
-Everything else is a static file served by Nginx from disk.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="36" lang="C">
 <h2 id="level-4--simply-static-expected-numbers">Level 4 — Simply Static: expected numbers</h2>
@@ -1218,42 +1185,8 @@ Bypass cookie: wordpress_logged_in.*|woocommerce_cart.*
 <h2 id="the-full-cache-hierarchy">The full cache hierarchy</h2>
 <p><img src="diagrams/cache-hierarchy-full.png" alt="" style="width:900px;" /></p>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="41" lang="C">
-<h2 id="what-youll-leave-with">What you'll leave with</h2>
-<p>By the end of this talk you'll know exactly how to achieve:</p>
-<div class="cols">
-<div>
-<div class="card">
-<p><img class="emoji" draggable="false" alt="🚫" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f6ab.svg" data-marp-twemoji=""/> → <img class="emoji" draggable="false" alt="✅" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2705.svg" data-marp-twemoji=""/> <strong>Crash eliminated</strong><br />
-Apache dies at 50 VU → Nginx + FPM handles it stably</p>
-</div>
-<div class="card">
-<p><img class="emoji" draggable="false" alt="⚡" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/26a1.svg" data-marp-twemoji=""/> <strong>37× faster response</strong><br />
-~3,000 ms → ~80 ms · same $12 VPS · zero cost</p>
-</div>
-<div class="card">
-<p><img class="emoji" draggable="false" alt="🗄️" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f5c4.svg" data-marp-twemoji=""/> <strong>DB load −75%</strong><br />
-20+ threads running → 3</p>
-</div>
-</div>
-<div>
-<div class="card">
-<p><img class="emoji" draggable="false" alt="🌍" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f30d.svg" data-marp-twemoji=""/> <strong>200× faster for global visitors</strong><br />
-~3,000 ms → ~15 ms · Cloudflare free tier</p>
-</div>
-<div class="card">
-<p><img class="emoji" draggable="false" alt="🚀" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f680.svg" data-marp-twemoji=""/> <strong>750× faster · PHP = 0</strong><br />
-~3,000 ms → ~4 ms · Simply Static · pure Nginx</p>
-</div>
-</div>
-</div>
-<br />
-<blockquote>
-<p><strong>Every number is live-measured. Every level is reproducible with <code>make level-N</code>.</strong></p>
-</blockquote>
-</section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="42" lang="C">
-<h2 id="lessons-learned-13">Lessons learned (1/3)</h2>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="41" data-class="compact" lang="C" class="compact" style="--class:compact;">
+<h2 id="lessons-learned">Lessons learned</h2>
 <div class="cols">
 <div>
 <p><strong>1. Measure before you fix</strong></p>
@@ -1263,8 +1196,7 @@ Apache dies at 50 VU → Nginx + FPM handles it stably</p>
 You cannot fix what you cannot see.</p>
 <p><code>make obs-up</code> — 30 seconds.</p>
 </div>
-</div>
-<div>
+<br />
 <p><strong>2. The three WP cache layers</strong></p>
 <div class="card">
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code>OPcache  → PHP bytecode  → always on
@@ -1275,11 +1207,6 @@ FastCGI  → Full pages    → nginx.conf
 All three: completely different machine.</p>
 </div>
 </div>
-</div>
-</section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="43" lang="C">
-<h2 id="lessons-learned-23">Lessons learned (2/3)</h2>
-<div class="cols">
 <div>
 <p><strong>3. pm.max_children is math, not guessing</strong></p>
 <div class="card">
@@ -1287,8 +1214,7 @@ All three: completely different machine.</p>
 Under-provision → queue → 503.</p>
 <p>Measure with Grafana, then calculate.</p>
 </div>
-</div>
-<div>
+<br />
 <p><strong>4. The DB is almost always the real bottleneck</strong></p>
 <div class="card">
 <ul>
@@ -1300,9 +1226,7 @@ Under-provision → queue → 503.</p>
 </div>
 </div>
 </div>
-</section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="44" lang="C">
-<h2 id="lessons-learned-33">Lessons learned (3/3)</h2>
+<br />
 <p><strong>5. The numbers — same $12 VPS, zero extra cost</strong></p>
 <div class="card">
 <table>
@@ -1334,7 +1258,7 @@ Under-provision → queue → 503.</p>
 <p>Configuration. Architecture. Understanding the bottleneck.</p>
 </div>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="45" lang="C">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="42" lang="C">
 <h2 id="the-tools--all-free-all-open-source">The tools — all free, all open source</h2>
 <div class="cols">
 <div>
@@ -1406,7 +1330,7 @@ Under-provision → queue → 503.</p>
 <p>Every level. Every screenshot. Every number. Reproducible.</p>
 </div>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="46" data-class="title" lang="C" class="title" style="--class:title;">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="43" data-class="title" lang="C" class="title" style="--class:title;">
 <h1 id="thank-you">Thank you!</h1>
 <br />
 <p><strong>Nedko Hristov</strong><br />
