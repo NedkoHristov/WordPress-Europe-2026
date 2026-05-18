@@ -22,6 +22,18 @@ data/redis/
 # Windows NTFS Alternate Data Streams (created when saving files via \\wsl.localhost\ path)
 *:Zone.Identifier
 
+# Generated presentation outputs (rebuild with: make slides)
+SLIDES-RICH.html
+SLIDES-RICH.pdf
+SLIDES-RICH.pptx
+SLIDES-RICH-editable.pptx
+
+# Generated diagram PNGs (rebuild with: make diagrams)
+diagrams/*.png
+
+# Screenshot backups (auto-rotated by screenshot.js)
+screenshots/screenshots-*/
+
 # Node & Dependencies
 node_modules/
 dist/

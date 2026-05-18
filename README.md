@@ -92,7 +92,7 @@ make load-woo       # WooCommerce browse-add-to-cart flow
 
 ## Screenshot Walkthrough
 
-See **`SCREENSHOT_GUIDE.md`** for the step-by-step guide: when to run each command, which Grafana panel to look at, and what to capture for each presentation slide.
+See **[`docs/SCREENSHOT_GUIDE.md`](docs/SCREENSHOT_GUIDE.md)** for the step-by-step guide: when to run each command, which Grafana panel to look at, and what to capture for each presentation slide.
 
 ## Repository Structure
 
