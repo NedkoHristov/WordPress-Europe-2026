@@ -6,6 +6,18 @@
 
 Clone → `docker compose` → reproduce every number from the talk.
 
+> ⚠️ **DEMO / CONFERENCE USE ONLY — NOT PRODUCTION READY**
+>
+> This repo is intentionally configured for reproducible live demos, not security.
+> Do **not** deploy this to a public server without hardening first:
+> - Credentials are hardcoded and public: WordPress `admin/admin123`, Grafana `admin/grafana`, MariaDB `wordpress/wordpress`
+> - Grafana anonymous access and HTTP (no TLS) are enabled
+> - MySQL root has no password inside the container network
+> - `expose_php = On` at Level 0 (intentional — it's the baseline demonstration)
+> - No firewall rules, no rate limiting, no fail2ban
+>
+> Use `.env` to override credentials if you must expose any port publicly.
+
 ## Quick Start
 
 ```bash
@@ -48,6 +60,24 @@ make load-crash
 | 06 — k6 Live | During every `make load-*` run |
 
 Open at: **http://localhost:3000** (admin/grafana)
+
+## Observability Stack
+
+`make obs-up` starts the entire stack. All dashboards and datasources auto-provision on first boot — no manual import needed.
+
+| Component | Role | What it collects |
+|---|---|---|
+| **Prometheus** | Metrics database + scrape engine | Pulls from all exporters every 15s. Stores 30 days. Source of all Grafana panels. |
+| **Grafana** | Visualization + dashboards | 7 pre-provisioned dashboards, queries Prometheus + Loki |
+| **Node Exporter** | Host-level metrics | CPU, RAM, disk I/O, network on the VPS itself |
+| **cAdvisor** | Container-level metrics | Per-container CPU/memory — see WordPress vs MariaDB vs Redis individually |
+| **mysqld-exporter** | MariaDB metrics | Threads running, buffer pool hit rate, slow queries, connections |
+| **redis-exporter** | Redis metrics | Hit/miss ratio, memory used, evictions, ops/sec |
+| **nginx-exporter** | Nginx metrics | Requests/s, active connections, cache HIT/MISS rates |
+| **php-fpm-exporter** | PHP-FPM pool metrics | Active workers, idle workers, queue depth, request rate |
+| **Loki** | Log aggregation | Stores all container logs, queryable from Grafana with LogQL |
+| **Promtail** | Log shipper | Tails Docker container logs → forwards to Loki with container labels |
+| **k6 → remote-write** | Load test metrics | k6 pushes VUs, req/s, p95, error rate into Prometheus in real time — visible in Grafana *while the test runs* |
 
 ## Architecture Diagrams
 
