@@ -19,6 +19,9 @@ data/redis/
 *~
 .idea/
 
+# Windows NTFS Alternate Data Streams (created when saving files via \\wsl.localhost\ path)
+*:Zone.Identifier
+
 # Node & Dependencies
 node_modules/
 dist/

@@ -1,6 +1,6 @@
 # Context — WordPress Europe 2026 Repo
 
-> **Last updated:** 2026-05-16
+> **Last updated:** 2026-05-18
 > **Status:** ✅ Ready for presentation — `bash scripts/full-run.sh` regenerates everything end-to-end
 > **Purpose:** Session continuity — paste this into any AI tool to resume work.
 
@@ -98,17 +98,29 @@ static/
   build.sh                                  # wget crawler → static export
   nginx-static.conf                         # serves Level 4 static export
 
-diagrams/
-  level-0-apache-baseline.excalidraw
-  level-1-nginx-fpm-redis.excalidraw
-  level-2-fastcgi-cache.excalidraw
-  level-4-hybrid-static.excalidraw
-  cache-hierarchy.excalidraw
-  fpm-pool-math.excalidraw
-  apache-math.excalidraw          # Apache worker/thread math (used on slide "The Apache math")
-  redis-intercept.excalidraw      # Redis flow: 246 HITs vs 54 MySQL misses per page request
-  fastcgi-intercept.excalidraw    # FastCGI cache: 70 HIT vs 30 BYPASS per 100 requests
-  fpm-offload.excalidraw          # Time-series chart: nginx total vs PHP-FPM gap (the "money slide")
+diagrams/                         # 19 .excalidraw + 19 .png (all normalized + exported)
+  level-0-apache-baseline.excalidraw   # L0: Apache prefork crash architecture
+  level-1-nginx-fpm-redis.excalidraw   # L1: Nginx + FPM + OPcache + Redis
+  level-2-fastcgi-cache.excalidraw     # L2: FastCGI page cache + MariaDB tuning
+  level-4-hybrid-static.excalidraw     # L4: hybrid static concept (WP + Simply Static)
+  cache-hierarchy.excalidraw           # Original cache pyramid (6 layers)
+  cache-hierarchy-full.excalidraw      # Full stack cache hierarchy used on slide
+  fpm-pool-math.excalidraw             # pm.max_children formula visualization
+  apache-math.excalidraw               # Apache worker/thread math
+  apache-prefork.excalidraw            # Apache prefork process model
+  redis-intercept.excalidraw           # Redis: 246 HITs 0.1ms vs 54 MySQL misses
+  redis-flow.excalidraw                # Redis flow diagram
+  fastcgi-intercept.excalidraw         # FastCGI: 70 HIT 8ms vs 30 BYPASS 100ms
+  fpm-offload.excalidraw               # Time-series: Nginx total vs PHP-FPM gap (70% cached)
+  static-concept.excalidraw            # Build-time vs runtime for Simply Static
+  cloudflare-cdn.excalidraw            # 3 browsers → CF edge (80-85% HIT) → $12 VPS
+  cloudflare-flow.excalidraw           # Cloudflare traffic flow diagram
+  observability-stack.excalidraw       # Prometheus + Grafana + Loki stack
+  simply-static-routing.excalidraw     # Simply Static routing concept
+  full-picture.excalidraw              # 5-column card layout L0→L4 grand finale (171 KB PNG)
+
+  # NOTE (Windows users): drag-and-drop to excalidraw.com only works from Windows Explorer
+  # Use UNC path: \\wsl.localhost\Ubuntu\home\nedko\repo\personal\WordPress-Europe-2026\diagrams
 
 screenshots/
   l0-00-demo.png .. l0-06-k6-live.png      # Level 0 Apache baseline (7 dashboards)
@@ -118,16 +130,24 @@ screenshots/
   screenshots-DDMMYY-NNN/                  # Auto-rotated backups from previous runs
 ```
 
-## Slide State (as of 2026-05-16)
+## Slide State (as of 2026-05-18)
 
 - All hardcoded run-specific numbers replaced with approximate ranges (~)
 - HTML font reduced 20% (sed post-processing: 26px → 20.8px)
-- `<!-- _class: dense -->` + 4-col table on: "Level 1 — reading the dashboard", "Level 2 — reading the dashboard"
-- All `see screenshot` values replaced with real approximates in: L0→L1 jump, L0→L1→L2 progression, L1 vs L2 table
+- `<!-- _class: dense -->` + 4-col table on: "Level 1 — reading the dashboard", "Level 2 — reading the dashboard", "Cloudflare Free Plan — what you get"
+- All `see screenshot` values replaced with real approximates everywhere
 - `scripts/export-diagrams.js` — natural bounding box (no hardcoded 1200×700 clip)
 - `scripts/normalize-diagrams.js` — adds all excalidraw.com-required fields before export
-- `scripts/screenshot.js` — rotation scoped to current PREFIX (l0/l1 screenshots no longer clobbered by l2 run)
+- `scripts/screenshot.js` — rotation scoped to current PREFIX
 - `make diagrams` runs normalize → export automatically
+- **Diagram PNGs live in slides:** cloudflare-cdn, cache-hierarchy-full, full-picture
+- **"What is a Virtual User?"** slide rewritten — removed ❌ list, 3-loop code block + real-world equivalence table
+- **"Lessons learned"** split into 3 slides (1/3: measure+cache layers, 2/3: FPM math+DB, 3/3: numbers table)
+- **"Lessons learned 3/3"** has the speed improvement table (37×/200×/750×)
+- **"What you'll leave with"** slide added before lessons learned (5 cards: crash → 37× → DB−75% → 200× → 750×)
+- **"The full picture"** slide uses full-picture.png (5-column fancy card layout, 171 KB)
+- **"The full cache hierarchy"** slide uses cache-hierarchy-full.png
+- **"Level 3 — Cloudflare CDN"** slide uses cloudflare-cdn.png
 
 ## What Still Needs Doing
 
@@ -137,9 +157,22 @@ screenshots/
 - [x] ~~`.env.example`~~ — created
 - [x] ~~Dashboard metric fixes~~ — PHP-FPM (4 fixes), Redis (3 fixes), Nginx (1 fix), k6 (3 fixes)
 - [x] ~~`make slides`~~ — generates HTML + PDF + PPTX + editable PPTX
-- [x] ~~`bash scripts/full-run.sh`~~ — fully autonomous end-to-end: reset → setup → bloat → L0/L0-crash/L1/L2 screenshots → slide regeneration
-- [ ] Add `blackbox_exporter` service to `docker-compose.yml` (nice-to-have)
+- [x] ~~`bash scripts/full-run.sh`~~ — fully autonomous end-to-end
+- [x] ~~Zone.Identifier files~~ — deleted (9 files), `*:Zone.Identifier` added to `.gitignore`
+- [x] ~~All diagram PNGs~~ — 19 excalidraw → 19 PNG, all normalized and exported
+- [ ] Slides: "Level 1 — what Redis is actually doing" → add `![w:900](diagrams/redis-intercept.png)`
+- [ ] Slides: "Level 2 — the FPM offload panel explained" → add `![w:900](diagrams/fpm-offload.png)`
+- [ ] Slides: "Level 4 — the concept" → add `![w:900](diagrams/static-concept.png)`
+- [ ] Add `blackbox_exporter` to `docker-compose.yml` (nice-to-have)
 - [ ] Add `simply-static` plugin auto-activation to `scripts/wp-setup.sh` (nice-to-have)
+- [ ] Level 3 Cloudflare live demo — blocked on `CLOUDFLARE_TUNNEL_TOKEN`
+
+## Cleanup Done (2026-05-18)
+
+- Deleted 9 `*:Zone.Identifier` files from `diagrams/` (Windows NTFS ADS, ZoneId=3 from excalidraw.com)
+- Added `*:Zone.Identifier` to `.gitignore`
+- README.md: added UNC path note for Windows drag-and-drop to excalidraw.com
+- README.md: updated diagrams table to reflect all 19 current diagrams
 
 ## Cloudflare CDN — Level 3 (blocked on token)
 

@@ -53,14 +53,32 @@ Open at: **http://localhost:3000** (admin/grafana)
 
 All diagrams in `diagrams/` are Excalidraw files. Open at https://excalidraw.com (File → Open).
 
+> **Windows users:** drag-and-drop from Windows Explorer using the UNC path:
+> `\\wsl.localhost\Ubuntu\home\nedko\repo\personal\WordPress-Europe-2026\diagrams`
+>
+> Drag-and-drop from VS Code's file explorer into the browser **does not work** — use Windows Explorer instead.
+
 | File | Shows |
 |---|---|
 | `level-0-apache-baseline.excalidraw` | Level 0: Apache + mod_php crash mode |
-| `level-1-nginx-fpm-redis.excalidraw` | Level 1: Nginx + FPM + Redis |
-| `level-2-fastcgi-cache.excalidraw` | Level 2: Page cache + DB tuning |
+| `level-1-nginx-fpm-redis.excalidraw` | Level 1: Nginx + FPM + OPcache + Redis |
+| `level-2-fastcgi-cache.excalidraw` | Level 2: FastCGI page cache + DB tuning |
 | `level-4-hybrid-static.excalidraw` | Level 4: Hybrid static architecture |
 | `cache-hierarchy.excalidraw` | Full 6-layer cache pyramid |
+| `cache-hierarchy-full.excalidraw` | Full stack — browser → CF → FastCGI → PHP → DB |
 | `fpm-pool-math.excalidraw` | pm.max_children formula visualization |
+| `apache-math.excalidraw` | Apache worker/thread math |
+| `apache-prefork.excalidraw` | Apache prefork process model |
+| `redis-intercept.excalidraw` | Redis: 246 HITs (0.1ms) vs 54 MySQL misses |
+| `redis-flow.excalidraw` | Redis object cache flow |
+| `fastcgi-intercept.excalidraw` | FastCGI: 70 HIT (8ms) vs 30 BYPASS (100ms) |
+| `fpm-offload.excalidraw` | Time-series: Nginx total vs PHP-FPM gap |
+| `static-concept.excalidraw` | Build-time + runtime model for Simply Static |
+| `cloudflare-cdn.excalidraw` | 3 browsers → CF edge (80–85% HIT) → $12 VPS |
+| `cloudflare-flow.excalidraw` | Cloudflare traffic flow |
+| `observability-stack.excalidraw` | Prometheus + Grafana + Loki architecture |
+| `simply-static-routing.excalidraw` | Simply Static routing concept |
+| `full-picture.excalidraw` | L0→L4 journey — 5-column grand finale card layout |
 
 ## Load Test Scenarios
 

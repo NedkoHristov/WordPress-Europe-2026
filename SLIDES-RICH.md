@@ -118,6 +118,14 @@ style: |
   section.dense p, section.dense li { font-size: 0.9em; }
   section.dense blockquote { margin: 10px 0; }
 
+  section.compact { padding: 16px 36px; font-size: 0.62em; }
+  section.compact h2 { font-size: 1.5em; margin-bottom: 0.3em; }
+  section.compact h3 { font-size: 1.2em; }
+  section.compact .card { padding: 8px 14px; margin: 4px 0; }
+  section.compact li { line-height: 1.3; margin-bottom: 0.05em; }
+  section.compact blockquote { margin: 6px 0; }
+  section.compact br { display: none; }
+
   /* ── Metric boxes ── */
   .metric { text-align: center; padding: 16px; }
   .metric .num { font-size: 2.4em; font-weight: 900; line-height: 1; }
@@ -230,49 +238,35 @@ Nginx Cache · Redis · k6 Live
 <div class="cols">
 <div>
 
-**NOT this:**
 <div class="card">
 
-❌ 50 VUs = 50 people who visited today
-❌ 50 VUs = 50 page loads total
-❌ 1 VU = 1 unique session
-
-</div>
-
-<br>
-
-**THIS:**
-<div class="card">
-
-✅ 1 VU = 1 browser-like loop running **continuously**
+**1 VU = 1 browser-like loop, running forever**
 
 ```
-VU #1: GET /  → sleep 1-2s
-       → GET /?p=1  → sleep 1-2s
-       → GET /  → repeat forever
+VU #1:  GET /  → wait 1s → GET /?p=1 → wait 1s → repeat …
+VU #2:  GET /  → wait 1s → GET /?p=2 → wait 1s → repeat …
+   ⋮
+VU #50: GET /  → wait 1s → GET /?p=5 → wait 1s → repeat …
 ```
 
-50 VUs = **50 concurrent loops**
-       = **~50 simultaneous open connections**
-       = **~50 requests/second sustained**
+50 VUs = **50 open connections** = **~50 req/s sustained**
 
 </div>
 
 </div>
 <div>
 
-**The real-world translation:**
 <div class="card">
 
-Real users have **10–30× longer think time** between clicks.
+**Real-world equivalent** *(think time = 15–30× longer in real life)*
 
-```
-50 VUs (k6, 1s think time)
-  ≈ 500–1,500 real simultaneous visitors
-```
+| k6 VUs | ≈ Real simultaneous visitors |
+|---|---|
+| 10 | ~150 – 300 |
+| **50** | **~750 – 1,500** |
+| 100 | ~1,500 – 3,000 |
 
-k6's 50 VUs is deliberately **aggressive** — it simulates a spike, not casual browsing.
-The crash happens faster and the improvements are more visible.
+k6 is deliberately **aggressive** — spikes are visible, crashes happen fast.
 
 </div>
 
@@ -938,47 +932,17 @@ Bypass cookie: wordpress_logged_in.*|woocommerce_cart.*
 
 ## The full picture
 
-| Level | Stack | p95 Latency | CPU @ 50 Virtual Users | DB Threads |
-|---|---|---|---|---|
-| **0** | Apache + mod_php | 💥 crash ~50 Virtual Users | 100% | 20–30 |
-| **1** | Nginx + FPM + OPcache + Redis | **~100–150 ms** | ~25% | ~10–15 |
-| **2** | Level 1 + FastCGI cache + MariaDB | **~70–90 ms** | ~18% | ~3 |
-| **3** | Level 2 + Cloudflare CDN | ~20 ms (edge) | <5% | <1 |
-| **4** | Level 2 + Simply Static | ~4 ms | <5% | <1 |
-
-<br>
-
-> ⬜ Levels 3 and 4 are architectural next steps — not live-demoed in this talk.
-> **Every improvement except Cloudflare costs exactly $0.**
-> It was configuration, architecture, and understanding the bottleneck.
+![w:900](diagrams/full-picture.png)
 
 ---
 
 ## The full cache hierarchy
 
-```
-Request from browser
-  │
-  ▼
-[Cloudflare CDN]  ← Level 3 (edge cache, global PoP)
-  │ miss
-  ▼
-[Nginx FastCGI Cache]  ← Level 2 (disk cache, 60-min TTL)
-  │ miss
-  ▼
-[PHP-FPM]  ← always running, pool of 20 workers
-  ├── [OPcache]  ← Level 1 (compiled bytecode in RAM)
-  └── [Redis Object Cache]  ← Level 1 (DB query results in RAM)
-       │ miss (first time only)
-       ▼
-    [MariaDB]  ← tuned at Level 2: 512MB buffer pool
-```
-
-> Each layer absorbed ~70–95% of what reached it.
-> MariaDB only sees the requests Redis couldn't answer.
+![w:900](diagrams/cache-hierarchy-full.png)
 
 ---
 
+<!-- _class: compact -->
 ## Lessons learned
 
 <div class="cols">
@@ -1039,6 +1003,21 @@ Measure with Grafana, then calculate.
 </div>
 
 </div>
+</div>
+
+<br>
+
+**5. The numbers — same $12 VPS, zero extra cost**
+<div class="card">
+
+| Path | p95 latency | Improvement |
+|---|---|---|
+| L0 crash → L2 (FastCGI cache) | ~80 ms | **~37× faster** — server stays alive |
+| L0 crash → L3 (Cloudflare CDN) | ~15 ms | **~200× faster** — edge serves the world |
+| L0 crash → L4 (Simply Static) | ~4 ms | **~750× faster** — PHP = 0 |
+
+Configuration. Architecture. Understanding the bottleneck.
+
 </div>
 
 ---
