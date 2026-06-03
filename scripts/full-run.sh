@@ -66,7 +66,7 @@ if ! node -e "require('playwright')" 2>/dev/null; then
 fi
 if ! node -e "require('playwright/lib/server/registry').Registry" 2>/dev/null; then
   warn "Playwright browser not installed — running npx playwright install chromium..."
-  npx playwright install chromium --with-deps 2>&1 | tail -5
+  npx playwright install chromium 2>&1 | tail -5
 fi
 
 ok "All preflight checks passed"
@@ -186,6 +186,7 @@ run_snapshot() {
   bash "$REPO_DIR/scripts/screenshot-watcher.sh" \
     --prefix "$LABEL" \
     --target-vu 45 \
+    --window 90 \
     --timeout 300 &
   WATCHER_PID=$!
 

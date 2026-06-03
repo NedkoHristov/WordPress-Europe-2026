@@ -41,7 +41,7 @@ style: |
 
   section {
     font-family: 'Inter', 'Segoe UI', sans-serif;
-    font-size: 26px;
+    font-size: 20px;
     background: #0d1117;
     color: #e6edf3;
     padding: 48px 64px;
@@ -49,7 +49,7 @@ style: |
 
   /* ── Typography ── */
   h1 { font-size: 2.2em; font-weight: 900; color: #58a6ff; margin-bottom: 0.2em; }
-  h2 { font-size: 1.6em; font-weight: 700; color: #58a6ff;
+  h2 { font-size: 1.4em; font-weight: 700; color: #58a6ff;
        border-bottom: 2px solid #e94560; padding-bottom: 10px; margin-bottom: 0.6em; }
   h3 { color: #ffa657; font-size: 1.1em; }
   strong { color: #ffa657; }
@@ -110,8 +110,8 @@ style: |
   section.screenshot h2 { font-size: 1.1em; margin-bottom: 0.3em; }
   section.screenshot { padding: 24px 40px; }
 
-  section.dense { padding: 28px 48px; }
-  section.dense h2 { font-size: 1.3em; margin-bottom: 0.4em; }
+  section.dense { padding: 20px 40px; }
+  section.dense h2 { font-size: 1.15em; margin-bottom: 0.3em; }
   section.dense .metric { padding: 10px; }
   section.dense .metric .num { font-size: 1.8em; }
   section.dense li { line-height: 1.4; margin-bottom: 0.1em; }
@@ -214,9 +214,9 @@ Nginx Cache · Redis · k6 Live
 
 | Level | Stack | p95 Latency | requests/s | CPU | DB Threads | New layer |
 |---|---|---|---|---|---|---|
-| <span class="pill pill-red">0</span> | Apache + mod_php | 💥 crash @ ~50 VU | ~140 → collapse | 100% | 20+ | — |
-| <span class="pill pill-blue">1</span> | + Nginx · FPM · OPcache · Redis | **~100–150 ms** | **~60–70** | ~25% | ~10–15 | OPcache · Redis |
-| <span class="pill pill-blue">2</span> | + FastCGI cache · MariaDB tuning | **~70–90 ms** | **~65–75** | ~18% | ~3 | FastCGI page cache |
+| <span class="pill pill-red">0</span> | Apache + mod_php | 💥 crash @ ~200 VU | ~40+ → collapse | 100% | 20+ | — |
+| <span class="pill pill-blue">1</span> | + Nginx · FPM · OPcache · Redis | **~100–130 ms** | **~50–60** | ~25% | ~15–20 | OPcache · Redis |
+| <span class="pill pill-blue">2</span> | + FastCGI cache · MariaDB tuning | **~70–90 ms** | **~65** | ~18% | ~0–3 | FastCGI page cache |
 | <span class="pill pill-gold">3</span> | + Cloudflare CDN | **~15 ms** (edge) | origin sees ~15% | <5% | <1 | Edge cache (300+ PoPs) |
 | <span class="pill pill-green">4</span> | + Simply Static export | **~4 ms** | 500–1,500+ | <3% | ~0 | Static file serving |
 
@@ -288,6 +288,66 @@ k6 is deliberately **aggressive** — spikes are visible, crashes happen fast.
 | **DB threads running** | MySQL queries *actively executing* — not just connected |
 | **Redis hit rate** | % of WordPress DB calls answered from RAM instead of MySQL |
 | **Cache offload** | % of HTTP requests served by nginx without PHP running at all |
+
+---
+
+## The two load test scripts
+
+> Why does one screenshot say **50 VU** and another say **500 VU**?
+
+<div class="cols">
+<div>
+
+### `snapshot.js` — 50 Virtual Users
+<div class="card">
+
+**Purpose:** measure and compare levels
+
+```
+0 → 50 VU in 20s
+hold 50 VU for 50s   ← screenshot fires here
+ramp down in 20s
+Total: 90 seconds
+```
+
+**Used for:** `make snapshot-l1`, `make snapshot-l2`
+
+✅ All three levels visible and comparable
+✅ L0 struggles, L1 stable, L2 stays clean
+
+</div>
+
+</div>
+<div>
+
+### `black-friday.js` — 0 → 500 Virtual Users
+<div class="card">
+
+**Purpose:** show the crash — not measure
+
+```
+0 → 10 VU (1 min warmup)
+→ 50 VU  ← L0 starts buckling here
+→ 100 VU ← screenshot fires here
+→ 200 VU → 350 VU → 500 VU
+Total: ~14 minutes
+```
+
+**Used for:** `make load-crash` (Level 0 only)
+
+❌ At 500 VU: L0 *and* L1 are dead — no useful comparison
+✅ Only useful for demonstrating *where* each level breaks
+
+</div>
+
+</div>
+</div>
+
+<br>
+
+> **Why not 500 VU for everything?** At 500 VU, L1 (Nginx+FPM) also collapses — 87% error rate, 10s+ latency.
+> Comparison only works when one level survives and the other doesn't.
+> **50 VU is the sweet spot: L0 breaks, L1 holds, L2 barely notices.**
 
 ---
 
@@ -373,20 +433,20 @@ Browser connects
 
 | Panel | Metric | Value | What it means |
 |---|---|---|---|
-| VU & req/s | Peak requests/s | ~140 → **collapse** | Server buckled — req/s fell while VUs kept climbing |
-| VU & req/s | req/s at 500 VU | **24.5** | 83% of requests failing or queued |
+| VU & req/s | req/s at 107 VU (screenshot) | **~40 req/s** | Still serving — collapse happens past ~200 VU |
+| VU & req/s | req/s trend | **~40+ → collapse** | Screenshot captured mid-ramp; peak-then-drop happens off-screen |
 | Latency | p95 | **~3–6 s** | Many × worse than Level 1 |
 | Latency | p99 | **~6 s** (hard ceiling) | Connections timing out at OS level |
 | Latency | p50 | **~1–2 s** | Even the median is unusable |
-| PHP-FPM | Queue depth | **~250** | Catastrophic backlog — workers exhausted |
-| PHP-FPM | Active workers | maxed → dropping | Workers timing out under load |
-| MariaDB | Threads running | **20** (max) | Every PHP request holding a DB connection |
+| Apache | Connection backlog | **~250+** | OS listen queue overflowing — new connections refused |
+| Apache | Worker processes | maxed → dropping | All 256 prefork slots occupied; requests queued then rejected |
+| MariaDB | Threads running | **30+** | Every PHP request holding a DB connection |
 
 <br>
 
-> **The crash is visible in one chart:**
-> Green requests/s goes up, then down, while Blue Virtual Users keep climbing.
-> The server is no longer responding to more load — only less.
+> **The crash is visible in the chart trend:**
+> Green requests/s climbs to ~40 req/s at 107 VUs, then collapses as VUs pass ~200.
+> The screenshot captures the server mid-ramp — the collapse happens off-screen as VUs continue to 500.
 
 ---
 
@@ -486,15 +546,15 @@ opcache.memory_consumption = 256  ; MB
 | Panel | Metric | Value | What it means |
 |---|---|---|---|
 | Virtual Users | Peak | 50 | Steady-state load |
-| Requests/s | Peak | **~65 req/s** ⭐ | Stable — no collapse |
+| Requests/s | Peak | **~50–55 req/s** ⭐ | Stable — no collapse |
 | Latency | p95 | **~130 ms** ⭐ | Was 3+ s — now human-perceptible |
-| FPM Workers | Peak active | ~12 / 20 | Headroom left |
+| FPM Workers | Peak active | ~8 / 20 | Headroom left |
 | FPM Queue | Depth | **0** ⭐ | **Crash eliminated** — was ~250 |
-| MariaDB | Peak threads | **~12 threads** ⭐ | Every request still hitting MySQL |
+| MariaDB | Peak threads | **~15–20 threads** ⭐ | Every request still hitting MySQL |
 | Requests vs FPM | Gap | none | No page cache yet — all to PHP |
-| Redis | Hit rate | **0% → ~80%** ⭐ | Cache warming during test |
-| Redis | Keys / memory | ~46K keys · 14.5 MB | Object cache in RAM |
-| Redis ops/s | Peak | ~6,000 | vs ~300 MySQL queries/s |
+| Redis | Hit rate | **~80% → ~97%** ⭐ | Cache warming during test |
+| Redis | Keys / memory | ~43K keys · 23 MB | Object cache in RAM |
+| Redis ops/s | Peak | ~2,500 | vs ~300 MySQL queries/s |
 
 <br>
 
@@ -507,13 +567,13 @@ opcache.memory_consumption = 256  ; MB
 | Metric | Level 0 | Level 1 | Δ |
 |---|---|---|---|
 | Crash at 50 Virtual Users | ❌ server buckles | ✅ stable | ⭐ **crash eliminated** |
-| Peak requests/s | ~140 → **collapse** | **~65 req/s** | stable throughput |
+| Peak requests/s | ~40+ → **collapse** | **~50–55 req/s** | stable throughput |
 | p95 Latency | ~3 s | **~130 ms** | ⭐ **−96%** |
 | p99 Latency | ~6 s flat ceiling | **~350 ms** | −94% |
 | CPU @ 50 Virtual Users | ~100% | **~25%** | ⭐ **−75%** |
-| FPM queue depth | ~250 backlog | **0** | ⭐ **queue gone** |
-| DB Threads peak | 20+ | **~12** | −40% |
-| Redis hit ratio | — | **~80%** | ⭐ **new cache layer** |
+| Request backlog | ~250 (Apache listen queue) | **0** (FPM absorbs) | ⭐ **queue gone** |
+| DB Threads peak | 30+ | **~15–20** | still MySQL-heavy |
+| Redis hit ratio | — | **~80–97%** | ⭐ **new cache layer** |
 
 <br>
 
@@ -532,7 +592,7 @@ opcache.memory_consumption = 256  ; MB
 
 <!-- _class: screenshot -->
 
-## 📸 Level 1 — Redis: 82% Hit Rate, 6K ops/s
+## 📸 Level 1 — Redis: 97% Hit Rate, ~2.5K ops/s
 
 ![w:1060](screenshots/l1-05-redis.png)
 
@@ -540,7 +600,7 @@ opcache.memory_consumption = 256  ; MB
 
 ## Level 1 — what Redis is actually doing
 
-**46,000 cached keys · 14.5 MB · 6,000 ops/s at peak**
+**~43,000 cached keys · 23 MB · ~2,500 ops/s at peak**
 
 ![w:900](diagrams/redis-intercept.png)
 
@@ -639,19 +699,19 @@ make level-2   # 10 seconds to switch. Same hardware.
 | Panel | Metric | Value | What it means |
 |---|---|---|---|
 | Virtual Users | Peak | 50 | Same load as L1 |
-| Requests/s | Peak | **~70–75 req/s** ⭐ | ~+10% vs L1 — nginx serving from disk |
+| Requests/s | Peak | **~65 req/s** ⭐ | ~+15–20% vs L1 — nginx serving from disk |
 | Latency | p95 | **~70–80 ms** ⭐ | ~−40% vs L1 — most requests never hit PHP |
 | CPU | @ 50 VU | **~18%** | Was ~25% at L1 — less PHP work |
-| FPM Workers | Peak active | **~11 / 20** | Was ~14 — less load on PHP |
+| FPM Workers | Peak active | **~10–12 / 20** | Was ~8 — cache absorbed the burst |
 | FPM Queue | Depth | **0** ⭐ | Stays clean — cache absorbs the burst |
 | FPM Request Rate | vs Nginx | **~20–30%** ⭐ | Only cache misses reach PHP |
 | FastCGI Cache | Offload | **~70%** ⭐ | 70% of requests: PHP never ran |
-| MariaDB | Peak threads | **~3** ⭐ | Was ~12 — 75–80% fewer DB queries |
+| MariaDB | Peak threads | **~0–3** ⭐ | Was ~15–20 — cache absorbs most traffic |
 | Requests vs FPM | Gap | **~50 req/s** | nginx total minus PHP-only = cached requests |
 
 <br>
 
-> ⭐ = the 5 metrics that tell the story. DB threads: 12 → **3**. The gap between nginx and FPM lines **is** the cache.
+> ⭐ = the 5 metrics that tell the story. DB threads: 15–20 → **~0–3**. The gap between nginx and FPM lines **is** the cache.
 
 ---
 
@@ -659,19 +719,19 @@ make level-2   # 10 seconds to switch. Same hardware.
 
 | Metric | Level 0 | Level 1 | Level 2 |
 |---|---|---|---|
-| Peak requests/s | ~140 → 💥 | ~65 req/s | **~70–75 req/s** |
+| Peak requests/s | ~40+ → 💥 | ~50–55 req/s | **~65 req/s** |
 | p95 Latency | ~3 s 💥 | ~130 ms | **~70–80 ms** |
 | CPU @ 50 Virtual Users | ~100% | ~25% | **~18%** |
-| FPM workers (peak) | — | ~12 / 20 | **~11 / 20** |
-| FPM queue depth | ~250 | 0 | **0** |
-| DB Threads peak | 20+ | ~10–15 | **~3** |
+| FPM workers (peak) | — | ~8 / 20 | **~10–12 / 20** |
+| Request queue | ~250 (Apache backlog) | 0 (FPM absorbs) | **0** |
+| DB Threads peak | 30+ | ~15–20 | **~0–3** |
 | FastCGI cache offload | 0% | 0% | **~70%** |
-| Redis hit ratio | — | ~80%+ | **~80%+** |
+| Redis hit ratio | — | ~80–97% | **~80–97%** |
 
 <br>
 
 > Level 2 does **more work with less resource** — 70% of requests never leave nginx.
-> DB threads: 12.5 → **3**. The bottleneck is gone.
+> DB threads: 15–20 → **~0–3**. The bottleneck is gone.
 
 ---
 
@@ -697,9 +757,11 @@ make level-2   # 10 seconds to switch. Same hardware.
 
 <!-- _class: screenshot -->
 
-## 📸 Level 2 — PHP-FPM: Steady at 10-11 Workers
+## 📸 Level 2 — PHP-FPM: Peak ~10 Workers During Cache-Miss Burst
 
 ![w:1060](screenshots/l2-02-php-fpm.png)
+
+> ⚠️ **Stat box = 1 worker** (end-of-run idle state). **The chart is the story** — peak ~10–12 workers during the 50-VU burst, then drops as FastCGI warms up and cache starts absorbing requests.
 
 ---
 
@@ -748,15 +810,15 @@ After tuning:
 
 | Metric | Level 1 | Level 2 | Change |
 |---|---|---|---|
-| Peak requests/s @ 50 Virtual Users | ~65 req/s | **~70–75 req/s** | **~+10%** |
+| Peak requests/s @ 50 Virtual Users | ~50–55 req/s | **~65 req/s** | **~+15–20%** |
 | p95 Latency | ~130 ms | **~70–80 ms** | **~−40%** |
 | CPU usage | ~25% | **~18%** | **~−30%** |
-| FPM workers (peak) | ~12 / 20 | **~11 / 20** | fewer needed |
+| FPM workers (peak) | ~8 / 20 | **~10–12 / 20** | cache absorbs the burst |
 | FPM queue depth | 0 | **0** | — |
-| MariaDB threads (peak) | ~12–15 | **~3** | **~−75–80%** |
+| MariaDB threads (peak) | ~15–20 | **~0–3** | **~−85–90%** |
 | Cache offload | 0% | **~70%** | ✅ majority served from disk |
-| Requests in 5 min (~300s) | ~19,500 | **~21,500** | **~+20–25%** |
-| Redis hit ratio | ~80%+ | ~80%+ | similar |
+| Requests in 5 min (~300s) | ~15,000 | **~19,500** | **~+25–30%** |
+| Redis hit ratio | ~80–97% | ~80–97% | similar |
 
 <br>
 

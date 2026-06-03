@@ -172,7 +172,7 @@ warmup:
 .PHONY: snapshot
 snapshot: warmup
 	@echo "$(YELLOW)▶ Snapshot: k6 burst + watcher (prefix=$(PREFIX), target $(TARGET_VU) VU)$(RESET)"
-	@bash scripts/screenshot-watcher.sh --prefix "$(PREFIX)" --target-vu $(TARGET_VU) & \
+	@bash scripts/screenshot-watcher.sh --prefix "$(PREFIX)" --target-vu $(TARGET_VU) --window 90 & \
 	WATCHER_PID=$$!; \
 	$(COMPOSE) --profile load run --rm \
 		-e BASE_URL=http://host.docker.internal:$(WP_PORT_VALUE) \
@@ -186,7 +186,7 @@ snapshot: warmup
 .PHONY: snapshot-l1
 snapshot-l1: level-1 warmup
 	@echo "$(YELLOW)▶ Snapshot L1: k6 burst + watcher (prefix=l1, target $(TARGET_VU) VU)$(RESET)"
-	@bash scripts/screenshot-watcher.sh --prefix l1 --target-vu $(TARGET_VU) & \
+	@bash scripts/screenshot-watcher.sh --prefix l1 --target-vu $(TARGET_VU) --window 90 & \
 	WATCHER_PID=$$!; \
 	$(COMPOSE) --profile load run --rm \
 		-e BASE_URL=http://host.docker.internal:$(WP_PORT_VALUE) \
@@ -198,7 +198,7 @@ snapshot-l1: level-1 warmup
 .PHONY: snapshot-l2
 snapshot-l2: level-2 warmup
 	@echo "$(YELLOW)▶ Snapshot L2: k6 burst + watcher (prefix=l2, target $(TARGET_VU) VU)$(RESET)"
-	@bash scripts/screenshot-watcher.sh --prefix l2 --target-vu $(TARGET_VU) & \
+	@bash scripts/screenshot-watcher.sh --prefix l2 --target-vu $(TARGET_VU) --window 90 & \
 	WATCHER_PID=$$!; \
 	$(COMPOSE) --profile load run --rm \
 		-e BASE_URL=http://host.docker.internal:$(WP_PORT_VALUE) \
@@ -254,7 +254,7 @@ diagrams:
 slides: diagrams
 	@echo "$(YELLOW)▶ Generating SLIDES-RICH.html$(RESET)"
 	npx @marp-team/marp-cli SLIDES-RICH.md --allow-local-files --html --output SLIDES-RICH.html
-	@sed -i 's|</head>|<style>section{font-size:20.8px!important}</style></head>|' SLIDES-RICH.html
+	@sed -i 's|</head>|<style>section{font-size:16px!important}</style></head>|' SLIDES-RICH.html
 	@echo "$(YELLOW)▶ Generating SLIDES-RICH.pdf$(RESET)"
 	CHROME_PATH=$(CHROME) npx @marp-team/marp-cli SLIDES-RICH.md --allow-local-files --pdf --output SLIDES-RICH.pdf
 	@echo "$(YELLOW)▶ Generating SLIDES-RICH.pptx$(RESET)"

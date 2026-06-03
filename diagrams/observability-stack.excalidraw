@@ -1689,10 +1689,10 @@
     }
   ],
   "appState": {
+    "viewBackgroundColor": "#ffffff",
     "gridSize": 20,
     "gridStep": 5,
     "gridModeEnabled": false,
-    "viewBackgroundColor": "#ffffff",
     "lockedMultiSelections": {}
   },
   "files": {}
