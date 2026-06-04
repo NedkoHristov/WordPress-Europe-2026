@@ -1,0 +1,28 @@
+# MariaDB — Level 2 tuned (for a 2GB VPS, MariaDB gets ~512MB)
+[mysqld]
+# InnoDB buffer pool: should hold the entire working dataset in RAM
+# On a $12 VPS (2GB), allocate ~40% to MariaDB
+innodb_buffer_pool_size = 512M
+innodb_buffer_pool_instances = 2
+innodb_log_file_size = 128M
+innodb_log_buffer_size = 16M
+innodb_flush_method = O_DIRECT
+innodb_flush_log_at_trx_commit = 2   # slight durability trade-off for throughput
+
+# Connections
+max_connections = 100                 # fewer connections → less RAM overhead
+thread_cache_size = 10
+table_open_cache = 2000
+
+# Temp tables (sort, GROUP BY)
+tmp_table_size = 64M
+max_heap_table_size = 64M
+
+# Slow query log — shipped to Loki via promtail
+slow_query_log = 1
+slow_query_log_file = /var/log/mysql/slow.log
+long_query_time = 0.5
+log_queries_not_using_indexes = 1
+
+# Disable deprecated query cache (it's a mutex bottleneck)
+# query_cache_type = 0   # default in MariaDB 11

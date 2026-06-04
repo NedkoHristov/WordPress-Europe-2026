@@ -1,0 +1,160 @@
+###############################################################################
+# WordPress Europe 2026 — Minimal $12 VPS Deployment
+# Nedko Hristov — github.com/NedkoHristov/WordPress-Europe-2026
+#
+# PRODUCTION CONFIGURATION
+# ========================
+# Optimized for 2GB RAM environment ($12 DigitalOcean Droplet)
+# All exporters expose metrics for remote Prometheus scraping
+# No local observability stack (Prometheus, Grafana, Loki)
+#
+# DEPLOYMENT:
+#   docker compose -f docker-compose.minimal.yml up -d
+#
+# EXPORTED METRICS (for remote scraping):
+#   • Node metrics: http://$IP:9100/metrics
+#   • MySQL metrics: http://$IP:9104/metrics
+#   • Redis metrics: http://$IP:9121/metrics (default redis-exporter)
+#   • Nginx metrics: http://$IP:9113/metrics
+#   • PHP-FPM metrics: http://$IP:8118/metrics (default php-fpm-exporter)
+#
+###############################################################################
+
+x-wp-env: &wp-env
+  WORDPRESS_DB_HOST: db:3306
+  WORDPRESS_DB_USER: wpuser
+  WORDPRESS_DB_PASSWORD: wppassword
+  WORDPRESS_DB_NAME: wordpress
+  WORDPRESS_DEBUG: 0
+  WORDPRESS_CONFIG_EXTRA: |
+    define('WP_REDIS_HOST', 'redis');
+    define('WP_REDIS_PORT', 6379);
+    define('WP_DEBUG_LOG', true);
+    define('SAVEQUERIES', false);
+    define('WP_CACHE', true);
+
+services:
+
+  # ─── DATABASE ──────────────────────────────────────────────────────────────
+  db:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpassword
+      MARIADB_DATABASE: wordpress
+      MARIADB_USER: wpuser
+      MARIADB_PASSWORD: wppassword
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./config/mariadb/00-minimal-vps.cnf:/etc/mysql/conf.d/wp.cnf:ro
+    # Lightweight configuration for $12 VPS
+    # Skip healthchecks to reduce startup latency and system calls
+
+  # ─── REDIS CACHE ──────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # Optimized memory limit for 2GB VPS environment
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru --save ""
+    volumes:
+      - redis_data:/data
+    expose:
+      - "6379"
+
+  # ─── WORDPRESS (Nginx+FPM) ────────────────────────────────────────────────
+  wordpress-fpm:
+    build:
+      context: .
+      dockerfile: app/Dockerfile.wp-fpm
+    restart: unless-stopped
+    depends_on:
+      - db
+      - redis
+    expose:
+      - "9000"
+    environment:
+      <<: *wp-env
+    volumes:
+      - wp_data:/var/www/html
+      - ./config/php/php-minimal.ini:/usr/local/etc/php/conf.d/wp-perf.ini:ro
+      - ./config/php/www-minimal.conf:/usr/local/etc/php-fpm.d/www.conf:ro
+      - ./config/php/opcache.ini:/usr/local/etc/php/conf.d/opcache.ini:ro
+      - ./plugins:/var/www/html/wp-content/plugins/custom:ro
+      - fastcgi_cache:/var/cache/nginx
+    # Resource limits for 2GB VPS
+    # FPM pool: 4-10 spare workers, max 12 (vs 20 on dev machine)
+    # Memory: ~40MB per worker = 480MB total for FPM at peak
+
+  # ─── WEB SERVER ───────────────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      - wordpress-fpm
+    ports:
+      - "${WP_PORT:-8080}:80"
+    volumes:
+      - wp_data:/var/www/html:ro
+      - ./config/nginx/nginx-minimal.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx/fastcgi-cache.conf:/etc/nginx/fastcgi-cache.conf:ro
+      - fastcgi_cache:/var/cache/nginx
+
+  # ─── METRICS EXPORTERS (for remote Prometheus) ──────────────────────────────
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.0
+    restart: unless-stopped
+    pid: host
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)
+      - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$$
+      - --collector.processes
+
+  mysqld-exporter:
+    image: prom/mysqld-exporter:v0.14.0
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "9104:9104"
+    environment:
+      DATA_SOURCE_NAME: "root:rootpassword@(db:3306)/"
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.62.0
+    restart: unless-stopped
+    ports:
+      - "9121:9121"
+    environment:
+      REDIS_ADDR: redis:6379
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:1.1.0
+    restart: unless-stopped
+    ports:
+      - "9113:9113"
+    command:
+      - --nginx.scrape-uri=http://nginx:80/nginx_status
+
+  php-fpm-exporter:
+    image: hipages/php-fpm_exporter:2.2.0
+    restart: unless-stopped
+    ports:
+      - "8118:8118"
+    environment:
+      PHP_FPM_SCRAPE_URI: tcp://wordpress-fpm:9000/status
+      PHP_FPM_FIX_PROCESS_COUNT: "true"
+
+volumes:
+  db_data:
+  wp_data:
+  redis_data:
+  fastcgi_cache:

@@ -1,0 +1,112 @@
+{
+  "uid": "wp-mysql",
+  "title": "not-for-demo-03 — MariaDB Deep Dive",
+  "description": "MySQL/MariaDB internals: threads, buffer pool, slow queries, InnoDB I/O. Screenshot during Level 0 crash (Threads_running spike) and Level 2 after tuning.",
+  "tags": ["mysql", "mariadb"],
+  "timezone": "browser",
+  "refresh": "5s",
+  "time": { "from": "now-10m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Threads Running",
+      "description": "The single best indicator of DB saturation. > 20 on a $12 VPS = trouble.",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 10, "color": "yellow" }, { "value": 20, "color": "red" }] } } },
+      "targets": [{ "datasource": "Prometheus", "expr": "mysql_global_status_threads_running", "legendFormat": "Threads Running" }]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Threads Connected",
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 50, "color": "yellow" }, { "value": 100, "color": "red" }] } } },
+      "targets": [{ "datasource": "Prometheus", "expr": "mysql_global_status_threads_connected", "legendFormat": "Connected" }]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Queries / sec",
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "targets": [{ "datasource": "Prometheus", "expr": "rate(mysql_global_status_queries[30s])", "legendFormat": "QPS" }]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "InnoDB Buffer Pool Hit %",
+      "description": "Should be > 99%. If lower, buffer_pool_size is too small.",
+      "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "percent", "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "value": 0, "color": "red" }, { "value": 95, "color": "yellow" }, { "value": 99, "color": "green" }] } } },
+      "targets": [{ "datasource": "Prometheus", "expr": "100 * mysql_global_status_innodb_buffer_pool_read_requests / (mysql_global_status_innodb_buffer_pool_read_requests + mysql_global_status_innodb_buffer_pool_reads)", "legendFormat": "Buffer Hit %" }]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Slow Queries Total",
+      "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 10, "color": "red" }] } } },
+      "targets": [{ "datasource": "Prometheus", "expr": "mysql_global_status_slow_queries", "legendFormat": "Slow Queries" }]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Aborted Connections",
+      "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 5, "color": "red" }] } } },
+      "targets": [{ "datasource": "Prometheus", "expr": "rate(mysql_global_status_aborted_connects[1m])", "legendFormat": "Aborted/s" }]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Threads Running — The Crash Indicator",
+      "description": "During Level 0 load-crash, watch this spike. Annotate the exact moment for the slide.",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "mysql_global_status_threads_running", "legendFormat": "Running" },
+        { "datasource": "Prometheus", "expr": "mysql_global_status_threads_connected", "legendFormat": "Connected" },
+        { "datasource": "Prometheus", "expr": "mysql_global_variables_max_connections", "legendFormat": "max_connections limit" }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Query Throughput",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "rate(mysql_global_status_queries[30s])", "legendFormat": "Total QPS" },
+        { "datasource": "Prometheus", "expr": "rate(mysql_global_status_com_select[30s])", "legendFormat": "SELECTs/s" },
+        { "datasource": "Prometheus", "expr": "rate(mysql_global_status_com_update[30s])", "legendFormat": "UPDATEs/s" },
+        { "datasource": "Prometheus", "expr": "rate(mysql_global_status_com_insert[30s])", "legendFormat": "INSERTs/s" }
+      ]
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "InnoDB Buffer Pool",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 6 },
+      "fieldConfig": { "defaults": { "unit": "decmbytes" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "mysql_global_status_innodb_buffer_pool_bytes_data / 1024 / 1024", "legendFormat": "Data in Buffer" },
+        { "datasource": "Prometheus", "expr": "mysql_global_status_innodb_buffer_pool_bytes_dirty / 1024 / 1024", "legendFormat": "Dirty Pages" },
+        { "datasource": "Prometheus", "expr": "mysql_global_variables_innodb_buffer_pool_size / 1024 / 1024", "legendFormat": "Buffer Pool Size" }
+      ]
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "InnoDB I/O",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 6 },
+      "fieldConfig": { "defaults": { "unit": "iops" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "rate(mysql_global_status_innodb_data_reads[30s])", "legendFormat": "Disk Reads/s" },
+        { "datasource": "Prometheus", "expr": "rate(mysql_global_status_innodb_data_writes[30s])", "legendFormat": "Disk Writes/s" },
+        { "datasource": "Prometheus", "expr": "rate(mysql_global_status_innodb_buffer_pool_read_requests[30s])", "legendFormat": "Buffer Reads/s" }
+      ]
+    }
+  ],
+  "schemaVersion": 39
+}

@@ -1,0 +1,297 @@
+###############################################################################
+# WordPress Europe 2026 — Stress Testing & Scaling on a $12 VPS
+# Nedko Hristov — github.com/NedkoHristov/WordPress-Europe-2026
+#
+# PROFILES:
+#   (none)     — core WordPress stack (Level 0: Apache baseline)
+#   nginx      — swap WordPress to Nginx+FPM (Level 1-2)
+#   obs        — full observability: Prometheus, Grafana, exporters, Loki
+#   load       — k6 load generator
+#   static     — static-site nginx server (Level 4)
+#
+# QUICK START:
+#   make level-0   # Apache baseline
+#   make level-1   # Nginx + PHP-FPM + OPcache + Redis
+#   make level-2   # + FastCGI page cache + MariaDB tuning
+#   make level-4   # + Simply Static export served from nginx
+###############################################################################
+
+x-wp-env: &wp-env
+  WORDPRESS_DB_HOST: db:3306
+  WORDPRESS_DB_USER: wpuser
+  WORDPRESS_DB_PASSWORD: wppassword
+  WORDPRESS_DB_NAME: wordpress
+  WORDPRESS_DEBUG: 0
+  WORDPRESS_CONFIG_EXTRA: |
+    define('WP_REDIS_HOST', 'redis');
+    define('WP_REDIS_PORT', 6379);
+    define('WP_DEBUG_LOG', true);
+    define('SAVEQUERIES', false);
+    define('WP_CACHE', true);
+
+services:
+
+  # ─── DATABASE ──────────────────────────────────────────────────────────────
+  db:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpassword
+      MARIADB_DATABASE: wordpress
+      MARIADB_USER: wpuser
+      MARIADB_PASSWORD: wppassword
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./config/mariadb/${MARIADB_CONFIG:-00-baseline.cnf}:/etc/mysql/conf.d/wp.cnf:ro
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+
+  # ─── REDIS ─────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru --save ""
+    volumes:
+      - redis_data:/data
+
+  # ─── WORDPRESS (Apache baseline — Level 0) ─────────────────────────────────
+  wordpress-apache:
+    build:
+      context: .
+      dockerfile: app/Dockerfile.wp-apache
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "${WP_PORT:-8080}:80"
+    environment:
+      <<: *wp-env
+    volumes:
+      - wp_data:/var/www/html
+      - ./plugins:/var/www/html/wp-content/plugins/custom:ro
+    profiles:
+      - apache
+
+  # ─── WORDPRESS (Nginx+FPM — Level 1+) ──────────────────────────────────────
+  wordpress-fpm:
+    build:
+      context: .
+      dockerfile: app/Dockerfile.wp-fpm
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    expose:
+      - "9000"
+    environment:
+      <<: *wp-env
+    volumes:
+      - wp_data:/var/www/html
+      - ./config/php/${PHP_INI:-php-tuned.ini}:/usr/local/etc/php/conf.d/wp-perf.ini:ro
+      - ./config/php/${FPM_CONF:-www.conf}:/usr/local/etc/php-fpm.d/www.conf:ro
+      - ./config/php/opcache.ini:/usr/local/etc/php/conf.d/opcache.ini:ro
+      - ./plugins:/var/www/html/wp-content/plugins/custom:ro
+      - fastcgi_cache:/var/cache/nginx
+    profiles:
+      - nginx
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      - wordpress-fpm
+    ports:
+      - "${WP_PORT:-8080}:80"
+    volumes:
+      - wp_data:/var/www/html:ro
+      - ./config/nginx/${NGINX_CONF:-nginx.conf}:/etc/nginx/nginx.conf:ro
+      - ./config/nginx/fastcgi-cache.conf:/etc/nginx/fastcgi-cache.conf:ro
+      - fastcgi_cache:/var/cache/nginx
+    profiles:
+      - nginx
+
+  # ─── STATIC SITE SERVER (Level 4) ──────────────────────────────────────────
+  static-site:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "8090:80"
+    volumes:
+      - ./static/export:/usr/share/nginx/html:ro
+      - ./static/nginx-static.conf:/etc/nginx/nginx.conf:ro
+    profiles:
+      - static
+
+  # ─── OBSERVABILITY ─────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.console.libraries=/usr/share/prometheus/console_libraries
+      - --web.console.templates=/usr/share/prometheus/consoles
+      - --web.enable-lifecycle
+      - --web.enable-remote-write-receiver
+      - --query.max-samples=100000000
+      - --storage.tsdb.retention.time=24h
+      - --enable-feature=native-histograms
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/prometheus/rules.yml:/etc/prometheus/rules.yml:ro
+      - prometheus_data:/prometheus
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9090/-/ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    profiles:
+      - obs
+
+  grafana:
+    image: grafana/grafana:11.0.0
+    restart: unless-stopped
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: grafana
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/01-overview.json
+      GF_SERVER_ROOT_URL: http://localhost:3000
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    profiles:
+      - obs
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.0
+    restart: unless-stopped
+    pid: host
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)
+    profiles:
+      - obs
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+    profiles:
+      - obs
+
+  mysqld-exporter:
+    image: prom/mysqld-exporter:v0.14.0
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATA_SOURCE_NAME: "root:rootpassword@(db:3306)/"
+    profiles:
+      - obs
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.62.0
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: redis:6379
+    profiles:
+      - obs
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:1.1.0
+    restart: unless-stopped
+    command:
+      - --nginx.scrape-uri=http://nginx:80/nginx_status
+    # No depends_on — exporter starts with obs profile regardless of which WP profile is active.
+    # It will log scrape errors when nginx isn't running (apache profile), which is harmless.
+    profiles:
+      - obs
+
+  php-fpm-exporter:
+    image: hipages/php-fpm_exporter:2.2.0
+    restart: unless-stopped
+    environment:
+      PHP_FPM_SCRAPE_URI: tcp://wordpress-fpm:9000/status
+      PHP_FPM_FIX_PROCESS_COUNT: "true"
+    profiles:
+      - obs
+
+  loki:
+    image: grafana/loki:3.0.0
+    restart: unless-stopped
+    user: "0:0"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./observability/loki/loki.yml:/etc/loki/local-config.yaml:ro
+      - ./data/loki:/loki
+    profiles:
+      - obs
+
+  promtail:
+    image: grafana/promtail:3.0.0
+    restart: unless-stopped
+    depends_on:
+      - loki
+    volumes:
+      - ./observability/promtail/promtail.yml:/etc/promtail/config.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    profiles:
+      - obs
+
+  # ─── LOAD GENERATOR ────────────────────────────────────────────────────────
+  k6:
+    image: grafana/k6:0.52.0
+    # No depends_on prometheus — k6 works standalone; remote-write is best-effort
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      K6_PROMETHEUS_RW_SERVER_URL: http://prometheus:9090/api/v1/write
+      K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: "false"
+      # Export p50/p90/p95/p99 quantiles — k6 v0.52+ requires p(N) format
+      K6_PROMETHEUS_RW_TREND_STATS: "p(50),p(90),p(95),p(99)"
+      K6_OUT: experimental-prometheus-rw
+    volumes:
+      - ./load/k6:/scripts:ro
+      - ./results:/results
+    entrypoint: ["k6"]
+    profiles:
+      - load
+
+volumes:
+  db_data:
+  wp_data:
+  redis_data:
+  fastcgi_cache:
+  prometheus_data:
+  grafana_data:
+  loki_data:

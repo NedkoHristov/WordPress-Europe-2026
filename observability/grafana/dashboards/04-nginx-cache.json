@@ -1,0 +1,90 @@
+{
+  "uid": "wp-nginx-cache",
+  "title": "not-for-demo-04 — Nginx + FastCGI Cache",
+  "description": "Nginx connections, request rate, cache HIT/MISS/BYPASS ratio. The most dramatic slide: 95%+ HIT rate at Level 2.",
+  "tags": ["nginx", "cache"],
+  "timezone": "browser",
+  "refresh": "5s",
+  "time": { "from": "now-10m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Active Connections",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 500, "color": "yellow" }, { "value": 900, "color": "red" }] } } },
+      "targets": [{ "datasource": "Prometheus", "expr": "nginx_connections_active", "legendFormat": "Active" }]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Accepted Connections / sec",
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "cps" } },
+      "targets": [{ "datasource": "Prometheus", "expr": "rate(nginx_connections_accepted[30s])", "legendFormat": "conn/s" }]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Requests / sec",
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "targets": [{ "datasource": "Prometheus", "expr": "rate(nginx_http_requests_total[30s])", "legendFormat": "RPS" }]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Waiting Connections",
+      "description": "keepalive / idle — high values mean clients are slow, not the server",
+      "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [{ "datasource": "Prometheus", "expr": "nginx_connections_waiting", "legendFormat": "Waiting" }]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Total Requests (5m window)",
+      "description": "Cumulative requests in last 5 minutes",
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 8 },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "increase(nginx_http_requests_total[5m])", "legendFormat": "Total Reqs" }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Request Rate Over Time",
+      "gridPos": { "x": 0, "y": 4, "w": 16, "h": 8 },
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "rate(nginx_http_requests_total[1m])", "legendFormat": "Requests/sec" },
+        { "datasource": "Prometheus", "expr": "rate(nginx_connections_accepted[1m])", "legendFormat": "Connections/sec" }
+      ]
+    },
+    {
+      "id": 20,
+      "type": "stat",
+      "title": "Current Connection State",
+      "description": "Reading + Writing + Waiting",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 6 },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "nginx_connections_reading + nginx_connections_writing + nginx_connections_waiting", "legendFormat": "Total" }
+      ]
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "PHP-FPM Offload — Requests NOT hitting PHP",
+      "description": "Every request served from cache = a PHP execution saved. This is the money slide.",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 6 },
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "sum(rate(nginx_http_requests_total[30s]))", "legendFormat": "Total RPS (Nginx)" },
+        { "datasource": "Prometheus", "expr": "rate(phpfpm_accepted_connections[30s])", "legendFormat": "RPS hitting PHP-FPM" }
+      ]
+    }
+  ],
+  "schemaVersion": 39
+}

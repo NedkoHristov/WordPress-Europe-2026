@@ -1,0 +1,56 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+  external_labels:
+    env: 'wp-stress-demo'
+
+rule_files:
+- rules.yml
+
+# k6 sends metrics via remote-write — receiver enabled via CLI flag
+# --web.enable-remote-write-receiver in docker-compose.yml
+
+scrape_configs:
+- job_name: 'prometheus'
+  static_configs:
+  - targets: [ 'localhost:9090' ]
+
+- job_name: 'node'
+  static_configs:
+  - targets: [ 'node-exporter:9100' ]
+
+- job_name: 'cadvisor'
+  static_configs:
+  - targets: [ 'cadvisor:8080' ]
+
+- job_name: 'mysql'
+  static_configs:
+  - targets: [ 'mysqld-exporter:9104' ]
+
+- job_name: 'redis'
+  static_configs:
+  - targets: [ 'redis-exporter:9121' ]
+
+- job_name: 'nginx'
+  static_configs:
+  - targets: [ 'nginx-exporter:9113' ]
+
+- job_name: 'php-fpm'
+  static_configs:
+  - targets: [ 'php-fpm-exporter:9253' ]
+
+- job_name: 'blackbox'
+  metrics_path: /probe
+  params:
+    module: [ http_2xx ]
+  static_configs:
+  - targets:
+    - http://nginx:80/
+    - http://nginx:80/wp-json/wp/v2/posts
+  relabel_configs:
+  - source_labels: [ __address__ ]
+    target_label: __param_target
+  - source_labels: [ __param_target ]
+    target_label: instance
+  - target_label: __address__
+    replacement: blackbox:9115

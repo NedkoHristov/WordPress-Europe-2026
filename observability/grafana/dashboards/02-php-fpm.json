@@ -1,0 +1,123 @@
+{
+  "uid": "wp-php-fpm",
+  "title": "not-for-demo-02 — PHP-FPM Deep Dive",
+  "description": "PHP-FPM pool internals: active/idle workers, queue depth, slow requests, OPcache hit ratio. Screenshot during Level 1 vs Level 0 comparison.",
+  "tags": ["php-fpm", "opcache"],
+  "timezone": "browser",
+  "refresh": "5s",
+  "time": { "from": "now-10m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Active Workers",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [
+            { "value": 0, "color": "green" },
+            { "value": 15, "color": "yellow" },
+            { "value": 19, "color": "red" }
+          ]}
+        }
+      },
+      "targets": [{
+        "datasource": "Prometheus",
+        "expr": "phpfpm_active_processes",
+        "legendFormat": "Active"
+      }]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Idle Workers",
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "value": 0, "color": "red" }, { "value": 2, "color": "green" }] } } },
+      "targets": [{ "datasource": "Prometheus", "expr": "phpfpm_idle_processes", "legendFormat": "Idle" }]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Queue Depth",
+      "description": "When this > 0 requests are waiting. When it maxes out nginx returns 502.",
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 1, "color": "yellow" }, { "value": 5, "color": "red" }] } } },
+      "targets": [{ "datasource": "Prometheus", "expr": "phpfpm_listen_queue", "legendFormat": "Queue" }]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Max Queue Reached",
+      "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [{ "datasource": "Prometheus", "expr": "phpfpm_max_listen_queue", "legendFormat": "Max Queue" }]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Slow Requests (>2s)",
+      "description": "Requests exceeding 2 second threshold — watch this during load spikes",
+      "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 5, "color": "yellow" }, { "value": 20, "color": "red" }] } } },
+      "targets": [{ "datasource": "Prometheus", "expr": "phpfpm_slow_requests", "legendFormat": "Slow Requests" }]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Requests / sec",
+      "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "targets": [{ "datasource": "Prometheus", "expr": "rate(phpfpm_accepted_connections[30s])", "legendFormat": "req/s" }]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Workers: Active vs Idle vs Max (pm.max_children = 20)",
+      "description": "When Active = max_children and Queue > 0 → the stack is saturated. THIS is the moment to screenshot for the pm.max_children slide.",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "phpfpm_active_processes", "legendFormat": "Active Workers" },
+        { "datasource": "Prometheus", "expr": "phpfpm_idle_processes", "legendFormat": "Idle Workers" },
+        { "datasource": "Prometheus", "expr": "phpfpm_listen_queue", "legendFormat": "Queue Depth" },
+        { "datasource": "Prometheus", "expr": "phpfpm_max_children_reached", "legendFormat": "Max Children Reached (cumulative)" }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Request Duration by Process (p50/p95/max)",
+      "description": "Per-process request execution time distribution",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "histogram_quantile(0.5, phpfpm_process_request_duration)", "legendFormat": "p50 {{process_id}}" },
+        { "datasource": "Prometheus", "expr": "histogram_quantile(0.95, phpfpm_process_request_duration)", "legendFormat": "p95 {{process_id}}" },
+        { "datasource": "Prometheus", "expr": "max(phpfpm_process_request_duration)", "legendFormat": "max" }
+      ]
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "Request Rate",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 6 },
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "rate(phpfpm_accepted_connections[30s])", "legendFormat": "FPM req/s" },
+        { "datasource": "Prometheus", "expr": "rate(phpfpm_slow_requests[30s])", "legendFormat": "Slow req/s (> 2s)" }
+      ]
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "Memory per Worker (container RSS)",
+      "description": "avg_worker_size feeds the pm.max_children formula",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 6 },
+      "fieldConfig": { "defaults": { "unit": "decmbytes" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "container_memory_rss{container_label_com_docker_compose_service=\"wordpress-fpm\"} / 1024 / 1024", "legendFormat": "{{name}}" }
+      ]
+    }
+  ],
+  "schemaVersion": 39
+}
