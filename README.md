@@ -2,7 +2,9 @@
 
 > **WordPress Europe 2026 — Kraków**  
 > Speaker: Nedko Hristov, Senior DevOps Engineer @ Nemetschek Bulgaria  
-> Talk: "From server crash to enterprise scale — a live-fire DevOps exercise"
+> Talk: "Stress testing and scaling WordPress on a $12 VPS"
+> Link: https://europe.wordcamp.org/2026/session/stress-testing-and-scaling-wordpress-on-a-12-vps/
+> Blog post: https://www.nedko.info/wpeu2026/
 
 Clone → `docker compose` → reproduce every number from the talk.
 
