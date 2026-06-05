@@ -116,7 +116,7 @@ Preview the 5-level table. Key message: same VPS, same site, same k6 script. Eve
 
 | Level | Stack | p95 Latency | requests/s | CPU | DB Threads | New layer |
 |---|---|---|---|---|---|---|
-| <span class="pill pill-red">0</span> | Apache + mod_php | 💥 crash @ ~50 VU | ~140 → collapse | 100% | 20+ | — |
+| <span class="pill pill-red">0</span> | Apache + mod_php | 💥 crash @ ~50 VU | ~40 → collapse | 100% | 20+ | — |
 | <span class="pill pill-blue">1</span> | + Nginx · FPM · OPcache · Redis | **133 ms** | **65** | 25% | 12.5 | OPcache · Redis |
 | <span class="pill pill-blue">2</span> | + FastCGI cache · MariaDB tuning | **79 ms** | **70** | 18% | 3 | FastCGI page cache |
 | <span class="pill pill-gold">3</span> | + Cloudflare CDN | **~15 ms** (edge) | origin sees ~15% | <5% | <1 | Edge cache (300+ PoPs) |
@@ -418,7 +418,7 @@ Walk the table row by row. Key callouts: p95 2.9s → 15× worse than L1. Queue 
 
 | Panel | Metric | Value | What it means |
 |---|---|---|---|
-| VU & req/s | Peak requests/s | ~140 → **collapse** | Server buckled — req/s fell while VUs kept climbing |
+| VU & req/s | Peak requests/s | ~40 → **collapse** | Server buckled — req/s fell while VUs kept climbing |
 | VU & req/s | req/s at 500 VU | **24.5** | 83% of requests failing or queued |
 | Latency | p95 | **2.9 s** | 15× worse than Level 1 |
 | Latency | p99 | **6 s flat** | Hard ceiling — connections timing out |
@@ -644,7 +644,7 @@ Walk the comparison table. p95: 3s → 133ms. CPU: 100% → 25%. Errors: crash �
 | Metric | Level 0 | Level 1 | Δ |
 |---|---|---|---|
 | Crash at 50 Virtual Users | ❌ server buckles | ✅ stable | **crash eliminated** |
-| Peak requests/s | ~140 → **collapse** | **65** | stable throughput |
+| Peak requests/s | ~40 → **collapse** | **65** | stable throughput |
 | p95 Latency | ~3 s | **133 ms** | **−95%** |
 | p99 Latency | 6 s flat ceiling | **~350 ms** | **−94%** |
 | CPU @ 50 Virtual Users | ~100% | **25%** | −75% |
@@ -934,7 +934,7 @@ Walk the three-column table. The story in one slide: crash → stable → fast. 
 
 | Metric | Level 0 | Level 1 | Level 2 |
 |---|---|---|---|
-| Peak requests/s | ~140 → 💥 | 65 | **70** |
+| Peak requests/s | ~40 → 💥 | 65 | **70** |
 | p95 Latency | ~3 s 💥 | 133 ms | **79 ms** |
 | CPU @ 50 Virtual Users | ~100% | 25% | **18%** |
 | FPM workers (peak) | — | 14 / 20 | **11 / 20** |
