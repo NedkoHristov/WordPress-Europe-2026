@@ -41,12 +41,47 @@ make load-crash
 
 ## Level Matrix
 
-| Level | Stack | Target RPS on $12 VPS |
-|---|---|---|
-| 0 | Apache + mod_php (default) | ~30–50 RPS before 503 |
-| 1 | Nginx + PHP-FPM + OPcache + Redis | ~200–400 RPS |
-| 2 | Level 1 + FastCGI page cache + MariaDB tuning | ~2,000–5,000 RPS |
-| 4 | Level 2 + hybrid static (Simply Static export) | ~50,000+ RPS (static limit) |
+| Level | Stack | RPS @ 50 VU | p95 Latency | Error Rate | Notes |
+|---|---|---|---|---|---|
+| 0 | Apache + mod_php | ~13 req/s | ~2,400 ms | 0% | Crashes at ~200 VU (Black Friday ramp) |
+| 1 | + Nginx + PHP-FPM + OPcache + Redis | ~3 req/s | ~10,800 ms | **87.7%** | FPM saturates — looks modern, collapses under load |
+| 2 | + FastCGI page cache + MariaDB tuning | ~23 req/s | **67 ms** | 0% | **160× faster than L1** — cache absorbs ~70% of PHP hits |
+| 4 | + hybrid static (Simply Static export) | same dynamic + static paths served at wire speed | — | 0% | — |
+
+> Measured with `level-compare.js` — 50 VU ramp, 3m30s, 2.5k posts + 500 WooCommerce products, Docker on localhost.
+> The L1 regression is intentional: without page caching, every request executes PHP. L2 fixes this.
+
+## Benchmark Results
+
+> **Test environment:** Docker on localhost (WSL2), 2.5k posts + 5k revisions, 500 WooCommerce products + 1.5k revisions  
+> **Load script:** `level-compare.js` — 50 VU ramp over 3m30s  
+> **Last run:** 2026-06-03
+
+| Level | Throughput | p95 Latency | Error Rate | vs previous |
+|---|---|---|---|---|
+| **L0** Apache + mod_php | 13.3 req/s | 2,381 ms | 0% | baseline |
+| **L1** Nginx + FPM + Redis | 3.1 req/s | 10,760 ms | 87.7% | ⬇ worse (FPM saturates) |
+| **L2** + FastCGI cache + MariaDB | 23.0 req/s | 67 ms | 0% | ⬆ **160× faster latency** vs L1 |
+
+### Snapshot run (50 VU burst, 90s — `snapshot.js`)
+
+| Level | Peak RPS | VUs at capture | p95 Latency |
+|---|---|---|---|
+| L0 baseline | ~28 req/s | 50 | ~800 ms |
+| L0 Black Friday | ~38 req/s | 107 (watcher fires early; crash follows at ~200 VU) | ~1,030 ms |
+| L1 Nginx+FPM+Redis | ~50–55 req/s | 50 | high (FPM saturating) |
+| L2 + FastCGI cache | ~65 req/s | 50 | ~67 ms |
+
+### Key improvement ratios
+
+| Metric | L1 → L2 |
+|---|---|
+| p95 latency | **160× faster** (10,760 ms → 67 ms) |
+| Error rate | 87.7% → **0%** |
+| Peak throughput | ~3 → **~23 req/s** (sustained) / ~50 → **~65 req/s** (peak burst) |
+| PHP-FPM workers at peak | ~8/20 → **~1/20** (FastCGI absorbs ~70% of hits) |
+| MariaDB threads at peak | ~15–20 → **~0–3** |
+| Redis hit rate | ~80–97% → **~97%** (stable) |
 
 ## Grafana Dashboards
 
